@@ -1,0 +1,16 @@
+div.nestedGraphNode
+{
+position:fixed;
+width:100px;
+padding:10px;
+border:solid;
+}
+
+div.nestedGraphNodeContent
+{
+position:fixed;
+width:500px;
+padding:10px;
+border:solid;
+visibility:hidden;
+}
