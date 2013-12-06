@@ -36,7 +36,7 @@ this.level = level;
 this.data = new data();
 
 
-this.width =width;
+this.width = width;
 this.height = height;
 this.rootId = "#"+id_connector;
 
@@ -50,25 +50,41 @@ var node = this.data.nodes[i];
 $(rootId).append(node.summary);
 $(rootId).append(node.Content);
 $('.'+node.id+'.nestedGraphNode').css('bottom',((node.posY - this.posY)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGrapgNode').css('left',((node.posX - this.posX)/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNode').css('left',((node.posX - this.posX)/zoom).toString()+'px');
 $('.'+node.id+'.nestedGraphNodeContent').css('bottom',((node.posY -this.posY +20)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGrapgNodeContent').css('left',((node.posX - this.posX)/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNodeContent').css('left',((node.posX - this.posX)/zoom).toString()+'px');
+
+//make things draggable
+
+$('.'+node.id+'.nestedGraphNode').draggable();
+$('.'+node.id+'.nestedGraphNode').on("dragstop",function(event,ui){
+});
 
 }
 
 };
 
-this.onZoomChange = function(zoom){
-this.zoom = zoom;
+this.onIncreasedZoom = function(){
+this.zoom = this.zoom * 1.1;
 this.render();
 }
 
-this.onLevelChange = function(level){
-this.level = level;
+this.onDecreasedZoom = function(){
+this.zoom = this.zoom *0.9;
+this.render();
+}
+
+this.onIncreasedLevel = function(){
+this.level = level+1;
 this.data.getLevel(posX,posY, level);
 
 this.render();
 };
+
+this.onDecreasedLevel = function(){
+this.level = level - 1;
+this.data.getLevel(posX,poY, level);
+}
 
 
 this.posX = posX;
