@@ -31,6 +31,8 @@ this.getLevel = function(x,y,level){
 
 function View(posX,posY,zoom,level,id_connector,width,height){
 
+this.posX = posX;
+this.posY = posY;
 this.zoom = zoom;
 this.level = level;
 this.data = new data();
@@ -87,8 +89,7 @@ this.data.getLevel(posX,poY, level);
 };
 
 
-this.posX = posX;
-this.posY = posY;
+
 
 this.onLeftKey = funcion(){
 this.data.getDiff(posX,posX-zooom,posY,posY, level);
