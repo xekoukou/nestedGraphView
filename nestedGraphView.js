@@ -98,14 +98,14 @@ posX = posX-zoom;
 this.render();
 };
 
-this.onRightKey = funcion(){
+this.onRightKey = function(){
 getData(posX,posX+zooom,posY,posY, level);
 posX = posX + zoom;
 
 this.render();
 };
 
-this.onDownKey = funcion(){
+this.onDownKey = function(){
 getData(posX,posX,posY,posY-zoom, level);
 posY = posY - zoom;
 
