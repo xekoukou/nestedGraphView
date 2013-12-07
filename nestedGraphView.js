@@ -25,7 +25,7 @@ this.getdiff = function(x,newX,y,newY, level){
 
 this.getLevel = function(x,y,level){
 
-}
+};
 
 }
 
@@ -67,12 +67,12 @@ $('.'+node.id+'.nestedGraphNode').on("dragstop",function(event,ui){
 this.onIncreasedZoom = function(){
 this.zoom = this.zoom * 1.1;
 this.render();
-}
+};
 
 this.onDecreasedZoom = function(){
 this.zoom = this.zoom *0.9;
 this.render();
-}
+};
 
 this.onIncreasedLevel = function(){
 this.level = level+1;
