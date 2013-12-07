@@ -84,7 +84,7 @@ this.render();
 this.onDecreasedLevel = function(){
 this.level = level - 1;
 this.data.getLevel(posX,poY, level);
-}
+};
 
 
 this.posX = posX;
