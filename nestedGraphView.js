@@ -91,7 +91,7 @@ this.data.getLevel(posX,poY, level);
 
 
 
-this.onLeftKey = funcion(){
+this.onLeftKey = function(){
 this.data.getDiff(posX,posX-zooom,posY,posY, level);
 posX = posX-zoom;
 
