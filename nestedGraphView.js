@@ -46,7 +46,7 @@ this.render = function(){
 
 (rootId).empty();
 
-for(i = 0; i++; i < this.data.nodes.length){
+for(var i = 0;  i < this.data.nodes.length; i++){
 
 var node = this.data.nodes[i];
 $(rootId).append(node.summary);
