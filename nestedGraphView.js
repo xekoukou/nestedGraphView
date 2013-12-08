@@ -22,12 +22,14 @@ this.nodes;
 
 this.getData = function(x,y,level,zoom){
 
-}
+};
 
 }
 
 function View(posX,posY,zoom,level,id_connector,width,height){
 
+this.posX = posX;
+this.posY = posY;
 this.zoom = zoom;
 this.level = level;
 this.data = new data();
@@ -41,7 +43,7 @@ this.render = function(){
 
 (rootId).empty();
 
-for(i = 0; i++; i < this.data.nodes.length){
+for(var i = 0;  i < this.data.nodes.length; i++){
 
 var node = this.data.nodes[i];
 $(rootId).append(node.summary);
@@ -67,7 +69,7 @@ this.onChangedZoom = function(diff){
 this.zoom = this.zoom * (1+(diff/100));
 this.data.getData(posX,posY, level,zoom);
 this.render();
-}
+};
 
 
 this.onIncreasedLevel = function(){
@@ -80,29 +82,24 @@ this.render();
 this.onDecreasedLevel = function(){
 this.level = level - 1;
 this.data.getData(posX,posY,level, zoom);
-}
+};
 
 
-this.posX = posX;
-this.posY = posY;
-
-this.onLeftKey = funcion(){
-
+this.onLeftKey = function(){
 posX = posX-zoom;
 this.data.getData(posX,posY, level,zoom);
 this.render();
 
 };
 
-this.onRightKey = funcion(){
-
+this.onRightKey = function(){
 posX = posX + zoom;
 this.data.getData(posX,posY, level,zoom);
 
 this.render();
 };
 
-this.onDownKey = funcion(){
+this.onDownKey = function(){
 
 posY = posY + zoom;
 this.data.getData(posX,posY, level,zoom);
