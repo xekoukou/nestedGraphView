@@ -16,13 +16,52 @@ this.summary = '<div class = "nestedGraphNode '+id+'" >' + summary + '</div>';
 
 }
 
-function data(){
 
-this.nodes;
+function Data(view){
+
+this.view = view;
+this.nodes = new Object();
+this.socket = io.connect("htttp://localhost:8000/nestedGraphView");
+
+
+this.socket.on('changes', function (data) {
+//  array with the changed nodes
+for(var i = 0; i < data.length(); i++){
+
+this.nodes[data[i].id]=data[i];
+
+}
+
+view.render();
+
+});
 
 this.getData = function(x,y,level,zoom){
+this.socket.emit("request", {posX:x , posY:y , level:level , zoom:zoom});
 
-};
+}
+
+this.socket.on("data", function(data){
+//data are objects not jsons
+//an aray of nodes
+
+for(var i = 0; i < data.length(); i++){
+
+this.nodes[data[i].id]=data[i];
+
+view.render();
+}
+
+
+
+});
+
+
+this.updateNode(node){
+
+this.socket.emit("update", node);
+
+}
 
 }
 
@@ -39,78 +78,91 @@ this.width = width;
 this.height = height;
 this.rootId = "#"+id_connector;
 
-this.render = function(){
+//no new data
+this.softChangeView = function(){
+
+//TODO find correct iterate method
+
+for(var i = 0;  i < this.data.nodes.length; i++){
+$('.'+node.id+'.nestedGraphNode').css('top',((node.posY - this.posY)/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNode').css('left',((node.posX - this.posX)/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNodeContent').css('top',((node.posY -this.posY +20)/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNodeContent').css('left',((node.posX - this.posX)/zoom).toString()+'px');
+}
+
+}
+
+this.hardChangeView = function(){
 
 (rootId).empty();
 
+//TODO find correct iterate method
 for(var i = 0;  i < this.data.nodes.length; i++){
 
 var node = this.data.nodes[i];
 $(rootId).append(node.summary);
 $(rootId).append(node.Content);
-$('.'+node.id+'.nestedGraphNode').css('top',((node.posY - this.posY)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGraphNode').css('left',((node.posX - this.posX)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGraphNodeContent').css('top',((node.posY -this.posY +20)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGraphNodeContent').css('left',((node.posX - this.posX)/zoom).toString()+'px');
 
 //make things draggable
 
 $('.'+node.id+'.nestedGraphNode').draggable();
 $('.'+node.id+'.nestedGraphNode').on("dragstop",function(event,ui){
-//update the server info
+//TODO update the server info plus the posX, posY of the node
 });
 
 }
 
+this.softChangeView();
+
 };
 
-this.onChangedZoom = function(diff){
-//this happens after the zoom event stops
-this.zoom = this.zoom * (1+(diff/100));
+
+this.onChangedLevel = function(){
 this.data.getData(posX,posY, level,zoom);
+this.hardChangeView();
+};
+
+
+//interactions
+
+//change of point of view
+$(this.rootId).on('mousedown', function(e){
+$(this.rootId).om('mousemove',function(e){
+//change the position of the nodes
+this.posX = e.pageX;
+this.posY = e.pageY;
+
+this.softChangeView();
+
+});
+});
+
+$(this.rootId).on('mouseup', function(e){
+
+$(this.rootId).unbind('mousemove');
 this.render();
-};
+});
+
+//level change
+$(this.rootId).on('keyup', function(e){
+if(event.which == 38 ){
+level = level + 1;
+this.onChangedLevel();
+}
+if(event.which == 40 ){
+level = level - 1;
+this.onChangedLevel();
+}
+
+});
 
 
-this.onIncreasedLevel = function(){
-this.level = level+1;
-this.data.getData(posX,posY, level,zoom);
+//zoom event
+$(this.rootId).on('mousewheel',function(e){
 
-this.render();
-};
+this.zoom = this.zoom + e.deltaY;
+this.hardChangeView();
 
-this.onDecreasedLevel = function(){
-this.level = level - 1;
-this.data.getData(posX,posY,level, zoom);
-};
-
-
-this.onLeftKey = function(){
-posX = posX-zoom;
-this.data.getData(posX,posY, level,zoom);
-this.render();
-
-};
-
-this.onRightKey = function(){
-posX = posX + zoom;
-this.data.getData(posX,posY, level,zoom);
-
-this.render();
-};
-
-this.onDownKey = function(){
-
-posY = posY + zoom;
-this.data.getData(posX,posY, level,zoom);
-this.render();
-};
-
-this.onUpKey = function(){
-posY = posY - zoom;
-this.data.getData(posX,posY, level,zoom);
-
-this.render();
-};
-
+}
+);
 }
