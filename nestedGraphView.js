@@ -1,4 +1,4 @@
-//zoom , the zoom level in centimeters per real centimeter
+// zoom , the zoom level in centimeters per real centimeter
 // level, the level of abstraction or nest
 
 // window.onLoad(alert("lol");
@@ -20,21 +20,9 @@ this.summary = '<div class = "nestedGraphNode '+id+'" >' + summary + '</div>';
 function Data(view){
 
 this.view = view;
-this.nodes = new Object();
+this.nodes = {};
 this.socket = io.connect("htttp://localhost:8000/nestedGraphView");
 
-
-this.socket.on('changes', function (data) {
-//  array with the changed nodes
-for(var i = 0; i < data.length(); i++){
-
-this.nodes[data[i].id]=data[i];
-
-}
-
-view.render();
-
-});
 
 this.getData = function(x,y,level,zoom){
 this.socket.emit("request", {posX:x , posY:y , level:level , zoom:zoom});
@@ -43,16 +31,21 @@ this.socket.emit("request", {posX:x , posY:y , level:level , zoom:zoom});
 
 this.socket.on("data", function(data){
 //data are objects not jsons
-//an aray of nodes
+//a hash of nodes
 
-for(var i = 0; i < data.length(); i++){
+ids = {};
 
-this.nodes[data[i].id]=data[i];
-
-view.render();
+Object.keys(data).forEach(function(id){
+if(data[id]==null){
+delete this.nodes[id];
 }
+else{
+this.nodes[id]=data[id];
+ids[i] = data[id];
+}
+});
 
-
+view.hardChangeView(ids);
 
 });
 
@@ -81,25 +74,34 @@ this.rootId = "#"+id_connector;
 //no new data
 this.softChangeView = function(){
 
-//TODO find correct iterate method
+Object.keys(this.data.nodes).forEach(function(id){
+var node = this.data.nodes[id];
 
-for(var i = 0;  i < this.data.nodes.length; i++){
-$('.'+node.id+'.nestedGraphNode').css('top',((node.posY - this.posY)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGraphNode').css('left',((node.posX - this.posX)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGraphNodeContent').css('top',((node.posY -this.posY +20)/zoom).toString()+'px');
-$('.'+node.id+'.nestedGraphNodeContent').css('left',((node.posX - this.posX)/zoom).toString()+'px');
+diffX = node.posX -this.posX;
+diffY = node.posY -this.posY;
+
+if(diffX < 0 || diffY < 0 || diffX > this.width || diffY > this.height){
+
+delete this.data.nodes[id];
+
+} else {
+$('.'+node.id+'.nestedGraphNode').css('top',(diffY/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNode').css('left',((diffX)/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNodeContent').css('top',((diffY +20)/zoom).toString()+'px');
+$('.'+node.id+'.nestedGraphNodeContent').css('left',(diffX/zoom).toString()+'px');
+}
+});
+
 }
 
-}
+this.hardChangeView = function(changedIds){
 
-this.hardChangeView = function(){
 
-(rootId).empty();
+for(var i = 0; i < changedIds.length, i++;){
 
-//TODO find correct iterate method
-for(var i = 0;  i < this.data.nodes.length; i++){
+node = this.data.nodes[changedIds[i]];
+$('.'+node.id).remove();
 
-var node = this.data.nodes[i];
 $(rootId).append(node.summary);
 $(rootId).append(node.Content);
 
@@ -107,7 +109,11 @@ $(rootId).append(node.Content);
 
 $('.'+node.id+'.nestedGraphNode').draggable();
 $('.'+node.id+'.nestedGraphNode').on("dragstop",function(event,ui){
-//TODO update the server info plus the posX, posY of the node
+node.posY = this.posY + ui.position.top;
+node.posX = this.posX + ui.position.left;
+
+this.data.updateNode(node);
+
 });
 
 }
@@ -117,10 +123,6 @@ this.softChangeView();
 };
 
 
-this.onChangedLevel = function(){
-this.data.getData(posX,posY, level,zoom);
-this.hardChangeView();
-};
 
 
 //interactions
@@ -140,18 +142,20 @@ this.softChangeView();
 $(this.rootId).on('mouseup', function(e){
 
 $(this.rootId).unbind('mousemove');
-this.render();
+this.data.getData(posX,posY, level,zoom);
 });
 
 //level change
 $(this.rootId).on('keyup', function(e){
 if(event.which == 38 ){
 level = level + 1;
-this.onChangedLevel();
+this.data.empty();
+this.data.getData(posX,posY, level,zoom);
 }
 if(event.which == 40 ){
 level = level - 1;
-this.onChangedLevel();
+this.data.empty();
+this.data.getData(posX,posY, level,zoom);
 }
 
 });
@@ -161,7 +165,7 @@ this.onChangedLevel();
 $(this.rootId).on('mousewheel',function(e){
 
 this.zoom = this.zoom + e.deltaY;
-this.hardChangeView();
+this.softChangeView();
 
 }
 );
