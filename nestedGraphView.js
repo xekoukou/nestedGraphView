@@ -50,7 +50,7 @@ view.hardChangeView(ids);
 });
 
 
-this.updateNode(node){
+this.updateNode = function(node){
 
 this.socket.emit("update", node);
 
