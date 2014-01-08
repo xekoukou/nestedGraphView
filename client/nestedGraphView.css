@@ -4,6 +4,7 @@ position:fixed;
 width:100px;
 padding:10px;
 border:solid;
+background-color:#98FB98;
 }
 
 div.nestedGraphNodeContent
@@ -13,4 +14,16 @@ width:500px;
 padding:10px;
 border:solid;
 visibility:hidden;
+}
+
+#canvas
+{
+position:relative;
+}
+#canvas
+{
+position:absolute;
+top:0;
+left:0;
+z-index:0;
 }
