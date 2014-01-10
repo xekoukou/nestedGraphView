@@ -15,7 +15,7 @@ function node(id, parentId, level, childrenIds, summary, content, posX, posY) {
     this.posY = posY;
     this.content = '<div class = "nestedGraphNodeContent ' + id + '" >' + content + '</div>';
     this.summary = '<div class = "nestedGraphNode ' + id + '" >' + summary + '</div>';
-    this.arrows = new Array();
+    this.arrows = new Object();
 }
 
 
@@ -59,19 +59,21 @@ function Data(view) {
                     thiss.view.removeNode(id);
                 }
             } else {
+                //add arrows property
+                data[id].arrows = new Object();
                 thiss.nodes[id] = data[id];
                 ids[i] = id;
                 i++;
             }
         });
-        view.hardChangeView(ids);
+        view.hardChangeView(view.cleanUnNodes(ids));
 
     });
 
 
 }
 //rootId has #
-function ArrowCanvas(rootId, nodes) {
+function ArrowCanvas(rootId, nodes, width, height) {
 
     var nodes = nodes;
     var thiss = this;
@@ -79,14 +81,16 @@ function ArrowCanvas(rootId, nodes) {
     //creating the canvas element
     $(rootId).append('<canvas id = "canvas"></canvas>');
     var canvas = oCanvas.create({
-        canvas: "#canvas",
-        background: "#ccc"
-    });
+            canvas: "#canvas",
+            background: "#ccc"
+        });
+ 
 
 
-    this.drawArrow = function(x, y, toX, toY) {
+    this.createArrow = function(x, y, toX, toY) {
         //head length
         var headlen = 10;
+        var angle = Math.atan2(toY - y, toX - x);
         var arrow = new Object();
         arrow[0] = canvas.display.line({
             start: {
@@ -96,7 +100,9 @@ function ArrowCanvas(rootId, nodes) {
             end: {
                 x: toX,
                 y: toY
-            }
+            },
+            stroke: "2px #0aa",
+            cap: "round"
         });
 
         arrow[1] = canvas.display.line({
@@ -106,21 +112,39 @@ function ArrowCanvas(rootId, nodes) {
             },
             end: {
                 x: toX - headlen * Math.cos(angle - Math.PI / 6),
-                y: toY - headlen * Math.cos(angle - Math.PI / 6)
-            }
+                y: toY - headlen * Math.sin(angle - Math.PI / 6)
+            },
+            stroke: "2px #0aa",
+            cap: "round"
         });
 
         arrow[2] = canvas.display.line({
             start: {
-                x: x,
-                y: y
+                x: toX,
+                y: toY
             },
             end: {
                 x: toX - headlen * Math.cos(angle + Math.PI / 6),
-                y: toY - headlen * Math.cos(angle + Math.PI / 6)
-            }
+                y: toY - headlen * Math.sin(angle + Math.PI / 6)
+            },
+            stroke: "2px #0aa",
+            cap: "round"
         });
         return arrow;
+    }
+
+    this.drawArrow = function(arrow) {
+        canvas.addChild(arrow[0]);
+        canvas.addChild(arrow[1]);
+        canvas.addChild(arrow[2]);
+
+    }
+
+    this.removeArrow = function(arrow) {
+        canvas.removeChild(arrow[0]);
+        canvas.removeChild(arrow[1]);
+        canvas.removeChild(arrow[2]);
+
     }
 
     this.drawArrows = function(changedIds) {
@@ -130,14 +154,14 @@ function ArrowCanvas(rootId, nodes) {
             Object.keys(origin.fNodes).forEach(function(n) {
                 if (n in nodes) {
                     //  redraw or draw ?
-                    //  TODO for now we just destroy the arrow
                     if (n in origin.arrows) {
-                        canvas.removeChild(origin.arrows[n]);
-                        origin.arrows[n] = thiss.drawArrow(origin.posX, origin.posY, nodes[n].posX, nodes[n].posY);
-                        canvas.addChild(origin.arrows[n]);
+                        origin.arrows[n].start = {
+                            x: origin.posX,
+                            y: origin.posY
+                        };
                     } else {
-                        origin.arrows[n] = thiss.drawArrow(origin.posX, origin.posY, nodes[n].posX, nodes[n].posY);
-                        canvas.addChild(origin.arrows[n]);
+                        origin.arrows[n] = thiss.createArrow(origin.posX, origin.posY, nodes[n].posX, nodes[n].posY);
+                        thiss.drawArrow(origin.arrows[n]);
                     }
 
                 }
@@ -147,14 +171,14 @@ function ArrowCanvas(rootId, nodes) {
             Object.keys(origin.bNodes).forEach(function(n) {
                 if (n in nodes) {
                     //  redraw or draw ?
-                    //  TODO for now we just destroy the arrow
                     if (origin.id in nodes[n].arrows) {
-                        canvas.removeChild(nodes[n].arrows[origin.id]);
-                        nodes[n].arrows[origin.id] = thiss.drawArrow(nodes[n].posX, nodes[n].posY, origin.posX, origin.posY);
-                        canvas.addChild(nodes[n].arrows[origin.id]);
+                        nodes[n].arrows[origin.id].end = {
+                            x: origin.posX,
+                            y: origin.posY
+                        };
                     } else {
-                        nodes[n].arrows[origin.id] = thiss.drawArrow(nodes[n].posX, nodes[n].posY, origin.posX, origin.posY);
-                        canvas.addChild(nodes[n].arrows[origin.id]);
+                        nodes[n].arrows[origin.id] = thiss.createArrow(nodes[n].posX, nodes[n].posY, origin.posX, origin.posY);
+                        thiss.drawArrow(nodes[n].arrows[origin.id]);
                     }
 
                 }
@@ -171,7 +195,7 @@ function ArrowCanvas(rootId, nodes) {
         Object.keys(origin.fNodes).forEach(function(n) {
             if (n in nodes) {
                 if (n in origin.arrows) {
-                    canvas.removeChild(origin.arrows[n]);
+                    canvas.removeArrow(origin.arrows[n]);
                     delete origin.arrows[n];
                 }
 
@@ -182,7 +206,7 @@ function ArrowCanvas(rootId, nodes) {
         Object.keys(origin.bNodes).forEach(function(n) {
             if (n in nodes) {
                 if (origin.id in nodes[n].arrows) {
-                    canvas.removeChild(nodes[n].arrows[origin.id]);
+                    canvas.removeArrow(nodes[n].arrows[origin.id]);
                     delete nodes[n].arrows[origin.id];
                 }
 
@@ -209,7 +233,6 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
     this.height = height;
     this.rootId = "#" + id_connector;
 
-    this.arrowCanvas = new ArrowCanvas(this.rootId, this.data.nodes);
 
 
 
@@ -227,43 +250,55 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
     this.setCanvasSize(this.width, this.height);
 
 
+    this.arrowCanvas = new ArrowCanvas(this.rootId, this.data.nodes);
+
     //for closures
     var thiss = this;
 
-    //no new data
-    this.softChangeView = function() {
 
-        Object.keys(this.data.nodes).forEach(function(id) {
-            var node = thiss.data.nodes[id];
+    this.cleanUnNodes = function(ids) {
+        var remIds = new Array();
 
+        for (var i = 0; i < ids.length; i++) {
+            var id = ids[i];
+            var node = this.data.nodes[id];
 
-            console.log('Inside softChange');
-            console.log(thiss.posX);
-            console.log(thiss.posY);
 
             var diffX = node.posX - thiss.posX;
             var diffY = node.posY - thiss.posY;
-            console.log(diffX);
-            console.log(diffY);
-            if (diffX < 0 || diffY < 0 || diffX > thiss.width || diffY > thiss.height) {
-                delete thiss.removeNode[id];
+            if (diffX < 0 || diffY < 0 || diffX > this.width || diffY > this.height) {
+                this.removeNode[id];
 
             } else {
-                $('.' + node.id + '.nestedGraphNode').css('top', (diffY / zoom).toString() + 'px');
-                $('.' + node.id + '.nestedGraphNode').css('left', ((diffX) / zoom).toString() + 'px');
-                $('.' + node.id + '.nestedGraphNodeContent').css('top', ((diffY + 20) / zoom).toString() + 'px');
-                $('.' + node.id + '.nestedGraphNodeContent').css('left', (diffX / zoom).toString() + 'px');
+                remIds.push(id);
             }
-        });
+        }
+        return remIds;
+    }
+
+    //no new data
+    this.softChangeView = function(ids) {
+        for (var i = 0; i < ids.length; i++) {
+            var id = ids[i];
+            var node = this.data.nodes[id];
+            var diffX = node.posX - thiss.posX;
+            var diffY = node.posY - thiss.posY;
+            $('.' + node.id + '.nestedGraphNode').css('top', (diffY / zoom).toString() + 'px');
+            $('.' + node.id + '.nestedGraphNode').css('left', ((diffX) / zoom).toString() + 'px');
+            $('.' + node.id + '.nestedGraphNodeContent').css('top', ((diffY + 20) / zoom).toString() + 'px');
+            $('.' + node.id + '.nestedGraphNodeContent').css('left', (diffX / zoom).toString() + 'px');
+        }
+        //draw Arrows
+        this.arrowCanvas.drawArrows(ids);
+
+
     };
 
     this.hardChangeView = function(changedIds) {
-        console.log('Inside hardChange');
 
         for (var i = 0; i < changedIds.length; i++) {
 
             var node = this.data.nodes[changedIds[i]];
-            console.log('changedids:' + changedIds);
             $('.' + node.id).remove();
             $(this.rootId).append(node.summary);
             $(this.rootId).append(node.content);
@@ -277,12 +312,14 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
                 $('.' + node.id + '.nestedGraphNodeContent').css('top', (ui.position.top + 20).toString() + 'px');
                 $('.' + node.id + '.nestedGraphNodeContent').css('left', (ui.position.left).toString() + 'px');
 
+                //draw Arrows
+                thiss.arrowCanvas.drawArrows([node.id]);
 
                 thiss.data.updateNode(node);
 
             });
         }
-        this.softChangeView();
+        this.softChangeView(changedIds);
 
     };
 
@@ -307,19 +344,14 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
 
     $(this.rootId).on('mousedown', function(e) {
         if (e.which == 3) {
-            console.log('i was here' + ' ' + 'mousedown');
             var initX = e.pageX;
             var initY = e.pageY;
 
             $(thiss.rootId).on('mousemove', function(e) {
-                console.log('i was here' + ' ' + 'mousemove');
-                //change the position of the nodes
-                console.log(e.pageX);
-                console.log(e.pageY);
                 thiss.posX = thiss.posX + ((e.pageX - initX) / 20) * thiss.zoom;
                 thiss.posY = thiss.posY + ((e.pageY - initY) / 20) * thiss.zoom;
 
-                thiss.softChangeView();
+                thiss.softChangeView(thiss.cleanUnNodes(Object.keys(thiss.data.nodes)));
 
             });
         }
@@ -327,7 +359,6 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
 
     $(this.rootId).on('mouseup', function(e) {
         if (e.which == 3) {
-            console.log('i was here' + ' ' + 'mouseup');
 
             $(thiss.rootId).unbind('mousemove');
             thiss.data.getData(posX, posY, level, zoom);
@@ -354,8 +385,7 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
     $(this.rootId).on('mousewheel', function(e) {
         if ((thiss.zoom + e.deltaY) > 0) {
             thiss.zoom = thiss.zoom + e.deltaY;
-            console.log('zoom level:' + thiss.zoom);
-            thiss.softChangeView();
+            thiss.softChangeView(Object.keys(thiss.cleanUnNodes(thiss.data.nodes)));
         }
     });
 

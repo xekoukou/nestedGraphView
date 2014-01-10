@@ -1,6 +1,6 @@
 var host = '127.0.0.1:8000';
 var secret = '234346hdsv b4dfngduingvkgnv';
-var sessionExpiry = 10 * 60 * 1000; //if the user doesnt do anything
+var sessionExpiry = 30 * 60 * 1000; //if the user doesnt do anything
 var cleanInterval = 60 * 1000; //every minute
 
 
@@ -121,7 +121,7 @@ setInterval(function(sessionStore, users) {
 
         for (var i = 0; i < keys.length; i++) {
             json = JSON.parse(sessions[keys[i]]);
-            if (user in json.passport) {
+            if ('user' in json.passport) {
                 if (date > users[json.passport.user].ld) {
                     delete users[json.passport.user]; //CAREFULL this is the serialized email
                     sessionStore.destroy(keys[i], null);
@@ -155,9 +155,13 @@ io.of('/nestedGraphView').on('connection', function(socket) {
         socket.on('request', function(data) {
             //TODO remove this is for debugging
             console.log('This is the data' + data);
-            var node = new Node(3243, 23424, 0, null, null, null, 'summary', 'content', 58, 700);
+            var node1 = new Node(7, 23424, 0, null, {}, {}, 'Summary 1', 'content 1', 58, 700);
+            var node2 = new Node(6, 23424, 0, null, {}, {}, 'summary 2', 'content 2', 200, 500);
+	    node2.fNodes[node1.id]=true;
+	    node1.bNodes[node2.id]=true;
             var data = new Object();
-            data[node.id] = node;
+            data[node1.id] = node1;
+            data[node2.id] = node2;
             socket.emit('data', data);
         });
     }
