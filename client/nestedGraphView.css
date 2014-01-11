@@ -16,14 +16,16 @@ border:solid;
 visibility:hidden;
 }
 
-#canvas
+body
 {
-position:relative;
+	margin:0px;
 }
-#canvas
+
+div#graphCanvas
 {
-position:absolute;
-top:0;
-left:0;
+}
+canvas#canvas
+{
+position:fixed;
 z-index:0;
 }
