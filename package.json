@@ -8,6 +8,7 @@
 		  "socket.io":"0.x",
 		  "passport":"0.x",
 		  "passport-google":"0.x",
-                  "passport.socketio":"2.x"
+                  "passport.socketio":"2.x",
+		  "zmq":"1.x"
 		  }
 }

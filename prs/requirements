@@ -1,0 +1,10 @@
+This server requires that the quadtrie-c library source code be put in a folder quadtrie-c.
+
+Other requirements:
+jansson library
+zeromq
+czmq
+leveldb
+
+
+One needs to create a folder localdb that will contain the DB.

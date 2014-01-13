@@ -1,0 +1,19 @@
+nodejs makes a request with 2 frames
+
+first frame
+id           ---> email address of user
+second frame
+request data   ---->json of the below form
+
+[{x:x,y:y,pos:pos},etc]   --->pos is from 0 bit to 63 bit representing the last critical bit 
+                            if pos is -1 that means to give all the nodes
+
+
+position_server responds with 2 frames as well
+
+first frame
+id         ----> the email
+second frame
+response data  ---> a json as below
+
+[{x:x,y:y,id:id},etc]
