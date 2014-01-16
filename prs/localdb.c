@@ -61,12 +61,10 @@ void localdb_insert_pos_id(localdb_t * localdb, pos_id_t pos_id)
 
 	char *errptr = NULL;
 
-	char lkey[18];
-	sprintf(lkey, "%s1", key);
 
 	leveldb_put
 	    (localdb->db,
-	     localdb->writeoptions, pos_id->id, sizeof(int64_t), (const char *)
+	     localdb->writeoptions, (const char *) &(pos_id.id), sizeof(int64_t), (const char *)
 	     &pos_id, 2 * sizeof(int64_t), &errptr);
 
 	if (errptr) {
@@ -85,10 +83,10 @@ pos_id_t *localdb_first(leveldb_iterator_t * iter)
 	if (leveldb_iter_valid(iter)) {
 		pos_id_t *pos_id = malloc(sizeof(pos_id_t));
 		size_t klen = sizeof(int64_t);
-		memcpy(&(pos->id), leveldb_iter_key(iter, klen));
+		memcpy(&(pos_id->id), leveldb_iter_key(iter, &klen),klen);
 
 		klen = 2 * sizeof(int64_t);
-		memcpy(pos, leveldb_iter_value(iter, klen));
+		memcpy(pos_id, leveldb_iter_value(iter, &klen),klen);
 
 		return pos_id;
 	} else {
@@ -105,10 +103,10 @@ pos_id_t *localdb_next(leveldb_iterator_t * iter)
 	if (leveldb_iter_valid(iter)) {
 		pos_id_t *pos_id = malloc(sizeof(pos_id_t));
 		size_t klen = sizeof(int64_t);
-		memcpy(&(pos->id), leveldb_iter_key(iter, klen));
+		memcpy(&(pos_id->id), leveldb_iter_key(iter, &klen),klen);
 
 		klen = 2 * sizeof(int64_t);
-		memcpy(pos, leveldb_iter_value(iter, klen));
+		memcpy(pos_id, leveldb_iter_value(iter, &klen),klen);
 
 		return pos_id;
 

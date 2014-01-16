@@ -29,7 +29,8 @@ struct pos_id_t {
 	uint64_t y;
 	int64_t id;
 
-} typedef struct pos_id_t pos_id_t;
+};
+typedef struct pos_id_t pos_id_t;
 
 typedef struct {
 	leveldb_t *db;
