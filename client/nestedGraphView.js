@@ -75,7 +75,11 @@ function Data(view) {
 
     });
 
+    this.empty = function(){
 
+Object.keys(this.nodes).forEach(this.view.removeNodes(id));
+
+}
 }
 //rootId has #
 function ArrowCanvas(rootId, nodes) {
