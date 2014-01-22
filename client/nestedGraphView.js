@@ -13,8 +13,8 @@ function node(id, parentId, level, childrenIds, summary, content, posX, posY) {
     this.level = level;
     this.parentId = parentd;
     this.childrenIds = childrenIds;
-    this.posX = posX;
-    this.posY = posY;
+    this.posX = Math.floor(posX);
+    this.posY = Math.floor(posY);
     this.content = '<div class = "nestedGraphNodeContent ' + id + '" >' + content + '</div>';
     this.summary = '<div class = "nestedGraphNode ' + id + '" >' + summary + '</div>';
     this.arrows = new Object();
@@ -38,8 +38,8 @@ function Data(view) {
 
     this.getData = function(x, y, level, zoom) {
         this.socket.emit("request", {
-            posX: x,
-            posY: y,
+            posX: Math.floor(x),
+            posY: Math.floor(y),
             level: level,
             zoom: zoom
         });
@@ -248,8 +248,8 @@ function ArrowCanvas(rootId, nodes) {
 
 function View(posX, posY, zoom, level, id_connector, width, height) {
 
-    this.posX = posX;
-    this.posY = posY;
+    this.posX = Math.floor(posX);
+    this.posY = Math.floor(posY);
     this.zoom = zoom;
     this.level = level;
     this.data = new Data(this);
@@ -315,8 +315,8 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
             $('.' + node.id + '.nestedGraphNode').draggable();
             $('.' + node.id + '.nestedGraphNode').on("drag", function(event, ui) {
 		var classN = event.target.className.split(' ',2)[1];
-                thiss.data.nodes[classN].posY = thiss.posY + ui.position.top * thiss.zoom;
-                thiss.data.nodes[classN].posX = thiss.posX + ui.position.left * thiss.zoom;
+                thiss.data.nodes[classN].posY = Math.floor(thiss.posY + ui.position.top * thiss.zoom);
+                thiss.data.nodes[classN].posX = Math.floor(thiss.posX + ui.position.left * thiss.zoom);
 
                 $('.' + node.id + '.nestedGraphNodeContent').css('top', (ui.position.top + 20).toString() + 'px');
                 $('.' + node.id + '.nestedGraphNodeContent').css('left', (ui.position.left).toString() + 'px');
@@ -359,8 +359,8 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
             var initY = e.pageY;
 
             $(thiss.rootId).on('mousemove', function(e) {
-                thiss.posX = thiss.posX + ((e.pageX - initX) / 20) * thiss.zoom;
-                thiss.posY = thiss.posY + ((e.pageY - initY) / 20) * thiss.zoom;
+                thiss.posX = Math.floor(thiss.posX + ((e.pageX - initX) / 20) * thiss.zoom);
+                thiss.posY = Math.floor(thiss.posY + ((e.pageY - initY) / 20) * thiss.zoom);
 
                 thiss.softChangeView(thiss.cleanUnNodes(Object.keys(thiss.data.nodes)));
 

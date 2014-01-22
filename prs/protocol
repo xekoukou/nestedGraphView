@@ -1,16 +1,16 @@
 
 First property is for the type of request
-'type'  (integer number)
-0
-1
+'type' integer
+0    search
+1    insert
 
 
 search req-res
 
-nodejs makes a request with 2 frames
+nodejs makes a request 
 
 second property 
-'id'           ---> email address of user
+'id'           ---> the socket.io id
 third property
 'data' requested data  ---->json of the below form
 
@@ -21,7 +21,7 @@ third property
 position_server responds with 2 frames as well
 
 second property
-'id'         ----> the email
+'id'         ----> the socket.io id
 third property
 'data' response data  ---> a json as below
 
@@ -38,5 +38,5 @@ second property
 responce
 
 second property
-'id'  -----> id of node
+'node'  -----> the same node
 

@@ -3,8 +3,24 @@ var secret = '234346hdsv b4dfngduingvkgnv';
 var sessionExpiry = 30 * 60 * 1000; //if the user doesnt do anything
 var cleanInterval = 60 * 1000; //every minute
 
+var maxWidth = 1920; //used to create a big enough request for the position server
+var maxHeight = 1080;
+
+
+if (process.argv.length != 3) {
+    console.log("Please provide the ip and port to which nodejs will connect to the position_server");
+}
+
+var pos_connnect_point = "tcp://" + process.argv[1] + ":" + process.argv[2];
 
 var fs = require('fs');
+var validator = require('json-schema');
+var schemas = require('./schema.js');
+var zmq = require('zmq');
+
+//connect to to position server
+var dealer = zmq.socket('dealer');
+dealer.connect(pos_connection_point);
 
 //tls certificate
 
@@ -76,7 +92,7 @@ passport.deserializeUser(function(id, done) {
 
 app.get('/auth/google', passport.authenticate('google'));
 
-app.get('/auth/google/return',
+pp.get('/auth/google/return',
     passport.authenticate('google', {
         successRedirect: '/graph.html',
         failureRedirect: '/login.html'
@@ -123,7 +139,7 @@ setInterval(function(sessionStore, users) {
             json = JSON.parse(sessions[keys[i]]);
             if ('user' in json.passport) {
                 if (date > users[json.passport.user].ld) {
-                    delete users[json.passport.user]; //CAREFULL this is the serialized email
+                    delete users[json.passport.user];
                     sessionStore.destroy(keys[i], null);
 
                 }
@@ -152,18 +168,33 @@ function Node(id, parentId, level, childrenIds, fNodes, bNodes, summary, content
 }
 
 io.of('/nestedGraphView').on('connection', function(socket) {
-        socket.on('request', function(data) {
-            //TODO remove this is for debugging
-            console.log('This is the data' + data);
-            var node1 = new Node(7, 23424, 0, null, {}, {}, 'Summary 1', 'content 1', 58, 700);
-            var node2 = new Node(6, 23424, 0, null, {}, {}, 'summary 2', 'content 2', 200, 500);
-	    node2.fNodes[node1.id]=true;
-	    node1.bNodes[node2.id]=true;
-            var data = new Object();
-            data[node1.id] = node1;
-            data[node2.id] = node2;
-            socket.emit('data', data);
-        });
-    }
+    socket.on('request', function(data) {
+        var result = validator.validate(data, schema.client - request);
+        if (result.valid == false) {
+            console.log('received invalid data');
+            return;
+        }
+        var json_request = new Array();
+        json_request[0] = new Object();
+        json_request[0].type = 0;
+        json_request[0].id = socket.id;
+        json_request[0].posX = data.posX;
+        json_request[0].posY = data.posY;
+        //the critical bit
+        json_request[0].pos = 64 - Math.floor(Math.max(Math.log(maxWidth * data.zoom) / Math.LN2, Math.log(maxHeight * data.zoom) / Math.LN2));
 
-);
+        dealer.send(JSON.stringify(json_request));
+
+    });
+
+});
+
+
+
+        dealer.on('message', function(msg) {
+            var json_recv = JSON.parse(msg.toString);
+//TODO ask for content and summary
+
+
+io.of('/nestedGraphView').sockets.socket(json_recv.id).emit('data',response);
+        });
