@@ -1,7 +1,7 @@
 //schema.js
 module.exports = {
 
-    client - request: {
+    clientRequest: {
         type: "object",
         properties: {
             posX: {
