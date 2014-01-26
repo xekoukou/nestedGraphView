@@ -1,7 +1,7 @@
 module.exports = {
 
-    startZMQ: function(pos_connect_point, port) {
-        var pos_connnect_point = "tcp://" + pos_connect_point + ":" + port;
+    startZMQ: function(address, port) {
+        var pos_connect_point = "tcp://" + address + ":" + port;
 
         var zmq = require('zmq');
 

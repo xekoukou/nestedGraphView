@@ -1,6 +1,6 @@
 module.exports = {
 
-    startLogic = function(io, dealer) {
+    startLogic: function(io, dealer) {
 
         function Node(id, parentId, level, childrenIds, fNodes, bNodes, summary, content, posX,
             posY) {
@@ -28,15 +28,18 @@ module.exports = {
                     console.log('received invalid data');
                     return;
                 }
-                var json_request = new Array();
-                json_request[0] = new Object();
-                json_request[0].type = 0;
-                json_request[0].id = socket.id;
-                json_request[0].posX = data.posX;
-                json_request[0].posY = data.posY;
-                //the critical bit
-                json_request[0].pos = 64 - Math.floor(Math.max(Math.log(maxWidth * data.zoom) / Math.LN2, Math.log(maxHeight * data.zoom) / Math.LN2));
+                var json_request = new Object();
+                json_request.type = 0;
+                json_request.id = socket.id;
 
+                var json_data = new Array();
+                json_data[0] = new Object();
+                json_data[0].posX = data.posX;
+                json_data[0].posY = data.posY;
+                //the critical bit
+                json_data[0].pos = 64 - Math.floor(Math.max(Math.log(maxWidth * data.zoom) / Math.LN2, Math.log(maxHeight * data.zoom) / Math.LN2));
+
+                json_request.data = json_data;
                 dealer.send(JSON.stringify(json_request));
 
             });

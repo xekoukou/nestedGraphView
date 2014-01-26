@@ -1,6 +1,6 @@
 module.exports = {
 
-    startHTTPServer: function(host, app) {
+    startHTTPServer: function(address,port, app) {
 
         var fs = require('fs');
 
@@ -15,7 +15,7 @@ module.exports = {
         var server = require('https').createServer(tlsOptions, app);
 
         //start server
-        server.listen(8000, host);
+        server.listen(port,address);
 
         return server;
 

@@ -95,11 +95,11 @@ int main(int argc, char
 	//create the server sockets
 	zctx_t *ctx = zctx_new();
 	void *router = zsocket_new(ctx, ZMQ_ROUTER);
-	int port = atoi(argv[1]);
-	int rc = zsocket_bind(router, "tcp://%s:%d", argv[0], port);
+	int port = atoi(argv[2]);
+	int rc = zsocket_bind(router, "tcp://%s:%d", argv[1], port);
 	if (rc != port) {
 		printf
-		    ("The position_server could't bind in the address and port specified");
+		    ("The position_server could't bind to %s:%d",argv[1],port);
 	}
 	//init the database
 	localdb_t *localdb;

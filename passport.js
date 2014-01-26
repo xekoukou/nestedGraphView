@@ -1,6 +1,6 @@
 module.exports = {
 
-    startPassport: function(passport, app, host, sessionExpiry, users) {
+    startPassport: function(passport, app,address,port, sessionExpiry, users) {
 
         var GoogleStrategy = require('passport-google').Strategy;
 
@@ -9,8 +9,8 @@ module.exports = {
 
 
         passport.use(new GoogleStrategy({
-                returnURL: 'https://' + host + '/auth/google/return',
-                realm: 'https://' + host +
+                returnURL: 'https://' + address +":"+ port + '/auth/google/return',
+                realm: 'https://' + address + ":" + port +
                     '/'
             },
             function(identifier, profile, done) {

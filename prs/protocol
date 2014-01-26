@@ -18,7 +18,7 @@ third property
                             if pos is -1 that means to give all the nodes
 
 
-position_server responds with 2 frames as well
+position_server responds with 2 properties as well
 
 second property
 'id'         ----> the socket.io id
@@ -33,10 +33,11 @@ insert req-res
 request 
 
 second property
-'node'   ------->  a node like before
+the json object as defined in schema.js
 
-responce
+response
 
 second property
-'node'  -----> the same node
+'node'  -----> the node that is affected with all its properties
+
 
