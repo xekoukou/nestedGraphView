@@ -10,9 +10,10 @@ json_t *search(quadbit_t * quadbit, json_t * json)
 
 
 	json_t *res_data_json = json_array();
+        json_t * json_data = json_object_get(json,"data");
 int i;
-	for (i = 0; i < json_array_size(json); i++) {
-		json_t *set = json_array_get(json, i);
+	for (i = 0; i < json_array_size(json_data); i++) {
+		json_t *set = json_array_get(json_data, i);
 
 		quadbit_item_t search;
 		search.x = json_integer_value(json_object_get(set, "x"));
@@ -51,37 +52,36 @@ int i;
 					    json_integer(res_item->id));
 			json_array_append(res_data_json, node);
 		}
-		json_object_set_new(response_json, "id",
-				    json_object_get(json, "id"));
 		json_object_set_new(response_json, "data", res_data_json);
 	json_decref(res_data_json);
 	}
 
-		json_object_set_new(response_json, "type", json_integer(0));
 	return response_json;
 
 }
+
 
 json_t * insert(localdb_t * localdb, quadbit_t * quadbit, json_t * json)
 {
 
+        json_t * json_data = json_object_get(json,"data");
+
 	pos_id_t *item = malloc(sizeof(pos_id_t));
-	item->x = json_integer_value(json_object_get(json, "x"));
-	item->y = json_integer_value(json_object_get(json, "y"));
-	item->id = json_integer_value(json_object_get(json, "id"));
-	localdb_insert_pos_id(localdb, *item);
+	item->x = json_integer_value(json_object_get(json_data, "x"));
+	item->y = json_integer_value(json_object_get(json_data, "y"));
+	item->id = json_integer_value(json_object_get(json_data, "id"));
+	localdb_insert_pos_id(localdb, item);
 	quadbit_insert(quadbit, (quadbit_item_t *) item);
 
-
-
+//update the id
+        json_object_set(json_data,"id",json_integer(item->id));
 	json_t *response_json = json_object();
-		json_object_set_new(response_json, "id",json_integer(item->id));
-
-		json_object_set_new(response_json, "type", json_integer(1));
+ 	json_object_set_new(response_json,"data",json_data);
 	return response_json;
 
 
 }
+
 
 int main(int argc, char
 	 *argv[])
@@ -150,7 +150,12 @@ int main(int argc, char
 				response_json = insert(localdb, quadbit, json);
 			}
 
-	zmsg_t *response = zmsg_new();
+		json_object_set_new(response_json, "id",
+				    json_object_get(json, "id"));
+		json_object_set_new(response_json, "type", json_integer(0));
+	
+
+zmsg_t *response = zmsg_new();
 		char *res_json_str = json_dumps(response_json, JSON_COMPACT);
 		zmsg_addstr(response,res_json_str);
 		free(res_json_str);

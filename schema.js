@@ -49,6 +49,10 @@ module.exports = {
                         type: "integer",
                         minimum: 0
                     },
+                    posY: {
+                        type: "integer",
+                        minimum: 0
+                    },
                     level: {
                         type: "integer",
                         minimum: 0

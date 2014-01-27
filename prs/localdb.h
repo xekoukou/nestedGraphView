@@ -25,14 +25,15 @@
 #include"quadtrie-c/quadbit.h"
 
 struct pos_id_t {
-	uint64_t x;
-	uint64_t y;
+	int64_t x;
+	int64_t y;
 	int64_t id;
 
 };
 typedef struct pos_id_t pos_id_t;
 
 typedef struct {
+        int64_t nextId;
 	leveldb_t *db;
 	leveldb_options_t *options;
 	leveldb_readoptions_t *readoptions;
@@ -45,6 +46,7 @@ void localdb_init(localdb_t ** localdb);
 //sleep a few seconds after
 void localdb_close(localdb_t * localdb);
 
+// id of -1 results in obtaining a new id
 void localdb_insert_pos_id(localdb_t * localdb, pos_id_t pos_id);
 
 //create an iterator and when the iter is invalid ,you finish destroy it

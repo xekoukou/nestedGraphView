@@ -30,14 +30,17 @@ third property
 
 insert req-res
 
-request 
+request
+'id'       -----> the socket.io id used to not broadcast to it the result
+           -----> so as not to provoce an interrupt on the client
 
 second property
-the json object as defined in schema.js
+'data' the node that is to be changed 
 
 response
+'id'       -----> the socket.io id
 
 second property
-'node'  -----> the node that is affected with all its properties
+'data'  -----> the node that is affected with all its properties
 
 

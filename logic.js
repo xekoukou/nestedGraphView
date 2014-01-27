@@ -23,7 +23,7 @@ module.exports = {
 
         io.of('/nestedGraphView').on('connection', function(socket) {
             socket.on('request', function(data) {
-                var result = validator.validate(data, schema.client - request);
+                var result = validator.validate(data, schema.searchRequest);
                 if (result.valid == false) {
                     console.log('received invalid data');
                     return;
@@ -43,6 +43,35 @@ module.exports = {
                 dealer.send(JSON.stringify(json_request));
 
             });
+            socket.on('update',function(data){
+                var result = validator.validate(data, schema.insertRequest);
+                if (result.valid == false) {
+                    console.log('received invalid data');
+                    return;
+                }
+
+                var json_request = new Object();
+                json_request.type = 1;
+                json_request.id = socket.id;
+if(data.request.type == "newNode"){
+json_request.posX = data.request.posX;
+json_request.posY = data.request.posY;
+//this is to show that it is a new node
+json_request.id = -1;
+                dealer.send(JSON.stringify(json_request));
+}
+if(data.requuest.request.type == "newPosition"){
+json_request.posX = data.request.request.posX;
+json_request.posY = data.request.request.posY;
+json_request.id = data.request.request.id;
+                dealer.send(JSON.stringify(json_request));
+
+}
+
+
+
+
+});
 
         });
 
@@ -52,9 +81,16 @@ module.exports = {
             var json_recv = JSON.parse(msg.toString);
             //TODO ask for content and summary
 
-
+//TODO if insert type broadcast to all except socketid
+if(json_recv.type == 0){
             io.of('/nestedGraphView').sockets.socket(json_recv.id).emit('data', response);
-        });
+ }
+
+if(json_recv.type == 1){
+io.of('/nestedGraphView').sockets.socket(json_recv.id).broadcast.emit('data',response);
+
+}
+       });
 
     }
 }
