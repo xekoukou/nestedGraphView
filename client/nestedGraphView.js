@@ -77,7 +77,7 @@ function Data(view) {
 
     this.empty = function(){
 
-Object.keys(this.nodes).forEach(this.view.removeNodes(id));
+Object.keys(this.nodes).forEach(this.view.removeNode(id));
 
 }
 }
@@ -376,8 +376,24 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
         }
     });
 
-    //level change
+$('.nestedGraphNode .nestedGraphNode').dbclick(function(e){
+//TODO change from wiki output to wiki syntax and focus on form
+
+
+//disable keydown actions so that keys are used to insert characters
+$(this.rootId).off('keydown');
+});
+
     $(this.rootId).on('keyup', function(e) {
+
+        if (event.which == esc){
+
+//TODO remove focus from element, turn text into wiki output
+
+//set keydown actions
+    $(this.rootId).on('keydown', function(e){
+        
+    //level change
         if (event.which == 38) {
             level = level + 1;
             thiss.data.empty();
@@ -389,7 +405,26 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
             thiss.data.getData(posX, posY, level, zoom);
         }
 
+        //TODO add more actions 
+        //they should only send data to server
+        // the server will have to accept the action and send back a verification
+});
+
+}
+
     });
+
+   //pressing esc focuses out of an input and bounds specific events to keys
+   
+
+}
+
+    });
+
+   //pressing esc focuses out of an input and bounds specific events to keys
+   
+   
+    
 
 
     //zoom event

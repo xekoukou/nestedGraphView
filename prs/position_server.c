@@ -6,12 +6,11 @@
 
 json_t *search(quadbit_t * quadbit, json_t * json)
 {
-		json_t *response_json = json_object();
-
+	json_t *response_json = json_object();
 
 	json_t *res_data_json = json_array();
-        json_t * json_data = json_object_get(json,"data");
-int i;
+	json_t *json_data = json_object_get(json, "data");
+	int i;
 	for (i = 0; i < json_array_size(json_data); i++) {
 		json_t *set = json_array_get(json_data, i);
 
@@ -25,8 +24,9 @@ int i;
 		    (pos_id_t *) quadbit_search_set(quadbit,
 						    &search, &res_parent, pos);
 		if (res_parent) {
-                        quadbit_iter_t qiter;
-			res_item = (pos_id_t *) quadbit_iter_first(&qiter, res_parent);
+			quadbit_iter_t qiter;
+			res_item =
+			    (pos_id_t *) quadbit_iter_first(&qiter, res_parent);
 			while (res_item) {
 
 				json_t *node = json_object();
@@ -38,7 +38,8 @@ int i;
 						    json_integer(res_item->id));
 				json_array_append(res_data_json, node);
 
-				res_item = (pos_id_t *) quadbit_iter_next(&qiter);
+				res_item =
+				    (pos_id_t *) quadbit_iter_next(&qiter);
 			}
 
 		} else {
@@ -53,35 +54,64 @@ int i;
 			json_array_append(res_data_json, node);
 		}
 		json_object_set_new(response_json, "data", res_data_json);
-	json_decref(res_data_json);
+		json_decref(res_data_json);
 	}
 
 	return response_json;
 
 }
 
-
-json_t * insert(localdb_t * localdb, quadbit_t * quadbit, json_t * json)
+json_t *insert(localdb_t * localdb, quadbit_t * quadbit, json_t * json)
 {
 
-        json_t * json_data = json_object_get(json,"data");
+	json_t *json_data = json_object_get(json, "data");
 
 	pos_id_t *item = malloc(sizeof(pos_id_t));
 	item->x = json_integer_value(json_object_get(json_data, "x"));
 	item->y = json_integer_value(json_object_get(json_data, "y"));
 	item->id = json_integer_value(json_object_get(json_data, "id"));
+
+//do not accept a new node with the same location
+       if( quadbit_search(quadbit,(quadbit_item_t *) item)){
+return;
+}
 	localdb_insert_pos_id(localdb, item);
 	quadbit_insert(quadbit, (quadbit_item_t *) item);
 
-//update the id
-        json_object_set(json_data,"id",json_integer(item->id));
-	json_t *response_json = json_object();
- 	json_object_set_new(response_json,"data",json_data);
-	return response_json;
+//update the id if it is a new node
+	json_object_set(json_data, "id", json_integer(item->id));
 
+        //we need a hash because the client accepts a hash
+        json_t *json_data_id_hash = json_object();
+        char id[64];
+        sprintf(id,"%ld",item->id);
+	json_object_set_new(json_data_id_hash, id, json_data);
+	json_t *response_json = json_object();
+	json_object_set_new(response_json, "data", json_data_id_hash);
+	return response_json;
 
 }
 
+json_t *delete(localdb_t * localdb, quadbit_t * quadbit, json_t * json)
+{
+	pos_id_t item ;
+	item.x = json_integer_value(json_object_get(json_data, "x"));
+	item.y = json_integer_value(json_object_get(json_data, "y"));
+	item.id = json_integer_value(json_object_get(json_data, "id"));
+
+free(quadbit_remove(quadbit, (pos_id_t *) &item));
+localdb_delete(localdb, item.id);
+
+        //we need a hash because the client accepts a hash
+        json_t *json_data_id_hash = json_object();
+        char id[64];
+        sprintf(id,"%ld",item.id);
+	json_object_set_new(json_data_id_hash, id, json_null());
+	json_t *response_json = json_object();
+	json_object_set_new(response_json, "data", json_data_id_hash);
+	return response_json;
+
+}
 
 int main(int argc, char
 	 *argv[])
@@ -99,7 +129,8 @@ int main(int argc, char
 	int rc = zsocket_bind(router, "tcp://%s:%d", argv[1], port);
 	if (rc != port) {
 		printf
-		    ("The position_server could't bind to %s:%d",argv[1],port);
+		    ("The position_server could't bind to %s:%d", argv[1],
+		     port);
 	}
 	//init the database
 	localdb_t *localdb;
@@ -142,24 +173,28 @@ int main(int argc, char
 			zmsg_destroy(&request);
 
 			json_t *response_json;
-			switch (json_integer_value(json_object_get(json, "type"))) {
+                        int type = json_integer_value
+				(json_object_get(json, "type")); 
+                        switch(type){
 
 			case 0:
 				response_json = search(quadbit, json);
 			case 1:
 				response_json = insert(localdb, quadbit, json);
 			}
+                        case 2: response_json = delete(localdb,quadbit,json);
 
-		json_object_set_new(response_json, "id",
-				    json_object_get(json, "id"));
-		json_object_set_new(response_json, "type", json_integer(0));
-	
+			json_object_set_new(response_json, "id",
+					    json_object_get(json, "id"));
+			json_object_set_new(response_json, "type",
+					    json_integer(type));
 
-zmsg_t *response = zmsg_new();
-		char *res_json_str = json_dumps(response_json, JSON_COMPACT);
-		zmsg_addstr(response,res_json_str);
-		free(res_json_str);
-	json_decref(response_json);
+			zmsg_t *response = zmsg_new();
+			char *res_json_str =
+			    json_dumps(response_json, JSON_COMPACT);
+			zmsg_addstr(response, res_json_str);
+			free(res_json_str);
+			json_decref(response_json);
 
 			json_decref(json);
 			zmsg_wrap(response, address);

@@ -46,12 +46,13 @@ void localdb_init(localdb_t ** localdb)
 		printf("\n%s", errptr);
 		exit(1);
 	}
-
 //obtain the nextId
-int64_t zero = 0;
-size_t vallen = sizeof(int64_t);
-(*localdb)->id = leveldb_get((*localdb)->db,readoptions, &zero,sizeof(int64_t),&vallen,&errptr);
-(*localdb)->id++;
+	int64_t zero = 0;
+	size_t vallen = sizeof(int64_t);
+	(*localdb)->id =
+	    leveldb_get((*localdb)->db, readoptions, &zero, sizeof(int64_t),
+			&vallen, &errptr);
+	(*localdb)->id++;
 }
 
 //needs a few seconds to close
@@ -62,35 +63,49 @@ void localdb_close(localdb_t * localdb)
 
 }
 
-void localdb_insert_pos_id(localdb_t * localdb, pos_id_t *pos_id)
+void localdb_insert_pos_id(localdb_t * localdb, pos_id_t * pos_id)
 {
 
 	char *errptr = NULL;
 
-if(pos_id->id !=-1){
-	leveldb_put
-	    (localdb->db,
-	     localdb->writeoptions, (const char *) &(pos_id->id), sizeof(int64_t), (const char *)
-	     pos_id, 2 * sizeof(int64_t), &errptr);
-}else{
+	if (pos_id->id != -1) {
+		leveldb_put
+		    (localdb->db,
+		     localdb->writeoptions, (const char *)&(pos_id->id),
+		     sizeof(int64_t), (const char *)
+		     pos_id, 2 * sizeof(int64_t), &errptr);
+	} else {
 
-leveldb_writebatch_t * wb = leveldb_writebatch_create();
-int64_t zero = 0;
-levedb_writebatch_put(wb,&zero,sizeof(int64_t),&(localdb->nextId),sizeof(int64_t));
-pos_id->id = localdb->nextId;
-levedb_writebatch_put(wb,&(localdb->nextId),sizeof(int64_t),pos_id,sizeof(int64_t));
+		leveldb_writebatch_t *wb = leveldb_writebatch_create();
+		int64_t zero = 0;
+		levedb_writebatch_put(wb, &zero, sizeof(int64_t),
+				      &(localdb->nextId), sizeof(int64_t));
+		pos_id->id = localdb->nextId;
+		levedb_writebatch_put(wb, &(localdb->nextId), sizeof(int64_t),
+				      pos_id, sizeof(int64_t));
 
-leveldb_write(localdb->db,localdb->writeoptions,wb,errptr);
-leveldb_writebatch_destroy(wb);
-localdb->nextId++;
+		leveldb_write(localdb->db, localdb->writeoptions, wb, errptr);
+		leveldb_writebatch_destroy(wb);
+		localdb->nextId++;
 
-}
+	}
 
 	if (errptr) {
 		printf("\n%s", errptr);
 		exit(1);
 	}
 
+}
+
+void localdb_delete(localdb_t *localdb, int64_t id){
+
+char *errptr = NULL;
+leveldb_delete(localdb->db,localdb->writeoptions,&id, sizeof(int64_t),&errptr);
+
+	if (errptr) {
+		printf("\n%s", errptr);
+		exit(1);
+	}
 }
 
 //create an iterator and when the iter is invalid ,you finish destroy it
@@ -102,10 +117,10 @@ pos_id_t *localdb_first(leveldb_iterator_t * iter)
 	if (leveldb_iter_valid(iter)) {
 		pos_id_t *pos_id = malloc(sizeof(pos_id_t));
 		size_t klen = sizeof(int64_t);
-		memcpy(&(pos_id->id), leveldb_iter_key(iter, &klen),klen);
+		memcpy(&(pos_id->id), leveldb_iter_key(iter, &klen), klen);
 
 		klen = 2 * sizeof(int64_t);
-		memcpy(pos_id, leveldb_iter_value(iter, &klen),klen);
+		memcpy(pos_id, leveldb_iter_value(iter, &klen), klen);
 
 		return pos_id;
 	} else {
@@ -122,10 +137,10 @@ pos_id_t *localdb_next(leveldb_iterator_t * iter)
 	if (leveldb_iter_valid(iter)) {
 		pos_id_t *pos_id = malloc(sizeof(pos_id_t));
 		size_t klen = sizeof(int64_t);
-		memcpy(&(pos_id->id), leveldb_iter_key(iter, &klen),klen);
+		memcpy(&(pos_id->id), leveldb_iter_key(iter, &klen), klen);
 
 		klen = 2 * sizeof(int64_t);
-		memcpy(pos_id, leveldb_iter_value(iter, &klen),klen);
+		memcpy(pos_id, leveldb_iter_value(iter, &klen), klen);
 
 		return pos_id;
 

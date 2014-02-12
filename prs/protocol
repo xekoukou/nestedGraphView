@@ -3,6 +3,7 @@ First property is for the type of request
 'type' integer
 0    search
 1    insert
+2    delete
 
 
 search req-res
@@ -28,7 +29,7 @@ third property
 [{x:x,y:y,id:id},etc]
 
 
-insert req-res
+insert req-res  /delete req-res
 
 request
 'id'       -----> the socket.io id used to not broadcast to it the result
@@ -41,6 +42,6 @@ response
 'id'       -----> the socket.io id
 
 second property
-'data'  -----> the node that is affected with all its properties
+'data'  -----> the node (inside an array) that is affected with all its properties
 
 
