@@ -1,7 +1,7 @@
 var host = '127.0.0.1:8000';
 var id_connector = 'graphCanvas';
-var width = 1920;
-var height = 1080;
+var maxWidth = 1920;
+var maxHeight = 1080;
 
 // zoom , the zoom level in centimeters per real centimeter
 // level, the level of abstraction or nest
@@ -30,18 +30,21 @@ function Data(view) {
     // passing data to the closure 
     var thiss = this;
 
-    this.updateNode = function(node) {
+    this.updateNode = function(updateRequest) {
 
-        this.socket.emit("update", node);
+        this.socket.emit("update", updateRequest);
 
     }
 
     this.getData = function(x, y, level, zoom) {
         this.socket.emit("request", {
-            posX: Math.floor(x),
-            posY: Math.floor(y),
             level: level,
-            zoom: zoom
+            searchArray: [{
+                posX: Math.floor(x),
+                posY: Math.floor(y),
+                crit_pos: 64 - Math.floor(Math.max(Math.log(maxWidth * zoom) / Math.LN2, Math.log(maxHeight * zoom) / Math.LN2))
+
+            }]
         });
 
     }
@@ -75,11 +78,11 @@ function Data(view) {
 
     });
 
-    this.empty = function(){
+    this.empty = function() {
 
-Object.keys(this.nodes).forEach(this.view.removeNode(id));
+        Object.keys(this.nodes).forEach(this.view.removeNode(id));
 
-}
+    }
 }
 //rootId has #
 function ArrowCanvas(rootId, nodes) {
@@ -96,58 +99,70 @@ function ArrowCanvas(rootId, nodes) {
         //head length
         var headlen = 10;
         var angle = Math.atan2(toY - y, toX - x);
-         arrow[0].start = {
-                'x': x,
-                'y': y
-            };
-            arrow[0].end =  {
-                'x': toX,
-                'y': toY
-            };
-          arrow[1].start = {
-                'x': (toX + x) / 2,
-                'y': (toY + y) / 2
-            };
-            arrow[1].end = {
-                'x': (toX + x) / 2 - headlen * Math.cos(angle - Math.PI / 6),
-                'y': (toY + y) / 2 - headlen * Math.sin(angle - Math.PI / 6)
-            };
-           arrow[2].start = {
-                x: (toX + x) / 2,
-                y: (toY + y) / 2
-            };
-            arrow[2].end = {
-                x: (toX + x) / 2 - headlen * Math.cos(angle + Math.PI / 6),
-                y: (toY + y) / 2 - headlen * Math.sin(angle + Math.PI / 6)
-            };
+        arrow[0].start = {
+            'x': x,
+            'y': y
+        };
+        arrow[0].end = {
+            'x': toX,
+            'y': toY
+        };
+        arrow[1].start = {
+            'x': (toX + x) / 2,
+            'y': (toY + y) / 2
+        };
+        arrow[1].end = {
+            'x': (toX + x) / 2 - headlen * Math.cos(angle - Math.PI / 6),
+            'y': (toY + y) / 2 - headlen * Math.sin(angle - Math.PI / 6)
+        };
+        arrow[2].start = {
+            x: (toX + x) / 2,
+            y: (toY + y) / 2
+        };
+        arrow[2].end = {
+            x: (toX + x) / 2 - headlen * Math.cos(angle + Math.PI / 6),
+            y: (toY + y) / 2 - headlen * Math.sin(angle + Math.PI / 6)
+        };
 
-    return arrow;
+        return arrow;
     };
 
 
     this.createArrow = function(x, y, toX, toY) {
         var arrow = new Array();
         arrow[0] = canvas.display.line({
-            start: {x:0,y:0} 
-            ,
-            end: {x:0,y:0} 
-            ,
+            start: {
+                x: 0,
+                y: 0
+            },
+            end: {
+                x: 0,
+                y: 0
+            },
             stroke: "2px #0aa",
             cap: "round"
         });
         arrow[1] = canvas.display.line({
-            start: {x:0,y:0} 
-            ,
-            end: {x:0,y:0} 
-            ,
+            start: {
+                x: 0,
+                y: 0
+            },
+            end: {
+                x: 0,
+                y: 0
+            },
             stroke: "2px #0aa",
             cap: "round"
         });
         arrow[2] = canvas.display.line({
-            start: {x:0,y:0} 
-            ,
-            end: {x:0,y:0} 
-            ,
+            start: {
+                x: 0,
+                y: 0
+            },
+            end: {
+                x: 0,
+                y: 0
+            },
             stroke: "2px #0aa",
             cap: "round"
         });
@@ -178,7 +193,7 @@ function ArrowCanvas(rootId, nodes) {
                 if (n in nodes) {
                     //  redraw or draw ?
                     if (n in origin.arrows) {
-                       origin.arrows[n] = thiss.changeArrow(origin.arrows[n], (origin.posX - posX) / zoom, (origin.posY - posY) / zoom, (nodes[n].posX - posX) / zoom, (nodes[n].posY - posY) / zoom);
+                        origin.arrows[n] = thiss.changeArrow(origin.arrows[n], (origin.posX - posX) / zoom, (origin.posY - posY) / zoom, (nodes[n].posX - posX) / zoom, (nodes[n].posY - posY) / zoom);
                     } else {
                         origin.arrows[n] = thiss.createArrow((origin.posX - posX) / zoom, (origin.posY - posY) / zoom, (nodes[n].posX - posX) / zoom, (nodes[n].posY - posY) / zoom);
                         thiss.drawArrow(origin.arrows[n]);
@@ -192,7 +207,7 @@ function ArrowCanvas(rootId, nodes) {
                 if (n in nodes) {
                     //  redraw or draw ?
                     if (origin.id in nodes[n].arrows) {
-                      nodes[n].arrows[origin.id] = thiss.changeArrow(nodes[n].arrows[origin.id],(nodes[n].posX - posX) / zoom, (nodes[n].posY - posY) / zoom, (origin.posX - posX) / zoom, (origin.posY - posY) / zoom);
+                        nodes[n].arrows[origin.id] = thiss.changeArrow(nodes[n].arrows[origin.id], (nodes[n].posX - posX) / zoom, (nodes[n].posY - posY) / zoom, (origin.posX - posX) / zoom, (origin.posY - posY) / zoom);
 
                     } else {
                         nodes[n].arrows[origin.id] = thiss.createArrow((nodes[n].posX - posX) / zoom, (nodes[n].posY - posY) / zoom, (origin.posX - posX) / zoom, (origin.posY - posY) / zoom);
@@ -314,7 +329,7 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
             //make things draggable
             $('.' + node.id + '.nestedGraphNode').draggable();
             $('.' + node.id + '.nestedGraphNode').on("drag", function(event, ui) {
-		var classN = event.target.className.split(' ',2)[1];
+                var classN = event.target.className.split(' ', 2)[1];
                 thiss.data.nodes[classN].posY = Math.floor(thiss.posY + ui.position.top * thiss.zoom);
                 thiss.data.nodes[classN].posX = Math.floor(thiss.posX + ui.position.left * thiss.zoom);
 
@@ -325,7 +340,7 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
                 var ids = new Array();
                 ids.push(node.id);
                 thiss.arrowCanvas.drawArrows(ids, thiss.posX, thiss.posY, thiss.zoom);
-
+                //TODO create a newPosition json request
                 thiss.data.updateNode(node);
 
             });
@@ -376,72 +391,72 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
         }
     });
 
-$('.nestedGraphNode .nestedGraphNode').dbclick(function(e){
-//TODO change from wiki output to wiki syntax and focus on form
+    $('.nestedGraphNode .nestedGraphNode').dbclick(function(e) {
+        //TODO change from wiki output to wiki syntax and focus on form
 
 
-//disable keydown actions so that keys are used to insert characters
-$(this.rootId).off('keydown');
-});
+        //disable keydown actions so that keys are used to insert characters
+        $(this.rootId).off('keydown');
+    });
 
     $(this.rootId).on('keyup', function(e) {
 
-        if (event.which == esc){
+        if (event.which == esc) {
 
-//TODO remove focus from element, turn text into wiki output
+            //TODO remove focus from element, turn text into wiki output
 
-//set keydown actions
-    $(this.rootId).on('keydown', function(e){
-        
-    //level change
-        if (event.which == 38) {
-            level = level + 1;
-            thiss.data.empty();
-            thiss.data.getData(posX, posY, level, zoom);
+            //set keydown actions
+            $(this.rootId).on('keydown', function(e) {
+
+                //level change
+                if (event.which == 38) {
+                    level = level + 1;
+                    thiss.data.empty();
+                    thiss.data.getData(posX, posY, level, zoom);
+                }
+                if (event.which == 40) {
+                    level = level - 1;
+                    thiss.data.empty();
+                    thiss.data.getData(posX, posY, level, zoom);
+                }
+
+                //TODO add more actions 
+                //they should only send data to server
+                // the server will have to accept the action and send back a verification
+            });
+
         }
-        if (event.which == 40) {
-            level = level - 1;
-            thiss.data.empty();
-            thiss.data.getData(posX, posY, level, zoom);
-        }
 
-        //TODO add more actions 
-        //they should only send data to server
-        // the server will have to accept the action and send back a verification
+    });
+
+    //pressing esc focuses out of an input and bounds specific events to keys
+
+
+}
+
 });
 
-}
-
-    });
-
-   //pressing esc focuses out of an input and bounds specific events to keys
-   
-
-}
-
-    });
-
-   //pressing esc focuses out of an input and bounds specific events to keys
-   
-   
-    
+//pressing esc focuses out of an input and bounds specific events to keys
 
 
-    //zoom event
-    $(this.rootId).on('mousewheel', function(e) {
-        if ((thiss.zoom + e.deltaY) > 0) {
-            thiss.zoom = thiss.zoom*(1 + 0.1 * e.deltaY);
-            thiss.softChangeView(thiss.cleanUnNodes(Object.keys(thiss.data.nodes)));
-        }
-    });
 
 
-    //first actions of the View function
-    this.data.getData(this.x, this.y, this.level, this.zoom);
+
+//zoom event
+$(this.rootId).on('mousewheel', function(e) {
+    if ((thiss.zoom + e.deltaY) > 0) {
+        thiss.zoom = thiss.zoom * (1 + 0.1 * e.deltaY);
+        thiss.softChangeView(thiss.cleanUnNodes(Object.keys(thiss.data.nodes)));
+    }
+});
+
+
+//first actions of the View function
+this.data.getData(this.x, this.y, this.level, this.zoom);
 
 }
 
 $(window).load(function(e) {
-    var view = new View(0, 0, 1, 0, id_connector, width, height);
+    var view = new View(0, 0, 1, 0, id_connector, maxWidth, maxHeight);
 
 });

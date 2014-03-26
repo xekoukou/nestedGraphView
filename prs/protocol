@@ -13,9 +13,9 @@ nodejs makes a request
 second property 
 'id'           ---> the socket.io id
 third property
-'data' requested data  ---->json of the below form
+'searchArray' requested data  ---->json of the below form
 
-[{x:x,y:y,pos:pos},etc]   --->pos is from 0 bit to 63 bit representing the last critical bit 
+[{posX:x,posY:y,crit_pos:pos},etc]   --->pos is from 0 bit to 63 bit representing the last critical bit 
                             if pos is -1 that means to give all the nodes
 
 
@@ -32,8 +32,7 @@ third property
 insert req-res  /delete req-res
 
 request
-'id'       -----> the socket.io id used to not broadcast to it the result
-           -----> so as not to provoce an interrupt on the client
+'id'       -----> the socket.io id 
 
 second property
 'data' the node that is to be changed 

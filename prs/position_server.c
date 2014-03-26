@@ -9,20 +9,20 @@ json_t *search(quadbit_t * quadbit, json_t * json)
 	json_t *response_json = json_object();
 
 	json_t *res_data_json = json_array();
-	json_t *json_data = json_object_get(json, "data");
+	json_t *json_searchArray = json_object_get(json, "searchArray");
 	int i;
-	for (i = 0; i < json_array_size(json_data); i++) {
-		json_t *set = json_array_get(json_data, i);
+	for (i = 0; i < json_array_size(json_searchArray); i++) {
+		json_t *set = json_array_get(json_searchArray, i);
 
 		quadbit_item_t search;
-		search.x = json_integer_value(json_object_get(set, "x"));
-		search.y = json_integer_value(json_object_get(set, "y"));
-		uint8_t pos = json_integer_value(json_object_get(set, "pos"));
+		search.x = json_integer_value(json_object_get(set, "posX"));
+		search.y = json_integer_value(json_object_get(set, "posY"));
+		uint8_t crit_pos = json_integer_value(json_object_get(set, "crit_pos"));
 		quadbit_node_t *res_parent = NULL;
 		pos_id_t
 		    * res_item =
 		    (pos_id_t *) quadbit_search_set(quadbit,
-						    &search, &res_parent, pos);
+						    &search, &res_parent, crit_pos);
 		if (res_parent) {
 			quadbit_iter_t qiter;
 			res_item =
@@ -77,9 +77,6 @@ return;
 }
 	localdb_insert_pos_id(localdb, item);
 	quadbit_insert(quadbit, (quadbit_item_t *) item);
-
-//update the id if it is a new node
-	json_object_set(json_data, "id", json_integer(item->id));
 
         //we need a hash because the client accepts a hash
         json_t *json_data_id_hash = json_object();

@@ -28,19 +28,13 @@ module.exports = {
                     console.log('received invalid data');
                     return;
                 }
+
                 var json_request = new Object();
-                json_request.type = 0;
                 json_request.id = socket.id;
-
-                var json_data = new Array();
-                json_data[0] = new Object();
-                json_data[0].posX = data.posX;
-                json_data[0].posY = data.posY;
-                //the critical bit
-                json_data[0].pos = 64 - Math.floor(Math.max(Math.log(maxWidth * data.zoom) / Math.LN2, Math.log(maxHeight * data.zoom) / Math.LN2));
-
-                json_request.data = json_data;
+		json_request.type = 'searchRequest'
+		json_request.browser_request = data;
                 dealer.send(JSON.stringify(json_request));
+
 
             });
             socket.on('update', function(data) {
@@ -49,8 +43,13 @@ module.exports = {
                     console.log('received invalid data');
                     return;
                 }
-
                 var json_request = new Object();
+                json_request.id = socket.id;
+		json_request.type = 'updateRequest';
+		json_request.request = data;
+                dealer.send(JSON.stringify(json_request));
+
+		//TODO REMOVE THE BELOW CODE ,look at broker
                 json_request.id = socket.id;
                 if (data.request.type == "newNode") {
                 json_request.type = 1;
@@ -67,7 +66,7 @@ module.exports = {
                     json_request.id = data.request.request.id;
                     dealer.send(JSON.stringify(json_request));
                 }
-                if (data.requuest.request.type == "newPosition") {
+                if (data.request.request.type == "newPosition") {
                 json_request.type = 1;
                     json_request.posX = data.request.request.posX;
                     json_request.posY = data.request.request.posY;
@@ -89,7 +88,7 @@ module.exports = {
             var json_recv = JSON.parse(msg.toString);
             //TODO ask for content and summary
 
-            if (json_recv.type == 0) {
+            if (json_recv.request == 'search' ) {
                 io.of('/nestedGraphView').sockets.socket(json_recv.id).emit('data', json_recv.data);
             }else{
 //TODO broadcast only to those that are close to the event

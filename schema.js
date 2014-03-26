@@ -4,21 +4,32 @@ module.exports = {
     searchRequest: {
         type: "object",
         properties: {
-            posX: {
-                type: "integer",
-                minimum: 0
-            },
-            posY: {
-                type: "integer",
-                minimum: 0
-            },
             level: {
                 type: "integer",
                 minimum: 0
             },
-            zoom: {
-                type: "integer",
-                minimum: 1
+            searchArray: {
+                type: "array",
+                minItems: 1,
+                items: {
+                    type: "object",
+                    properties: {
+                        posX: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        posY: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        crit_pos: {
+                            type: "integer",
+                            minimum: 0
+                        }
+
+
+                    }
+                }
             }
 
         },
@@ -73,24 +84,24 @@ module.exports = {
                 'type': {
                     'enum': ['delNode']
                 },
-                    posX: {
-                        type: "integer",
-                        minimum: 0
-                    },
-                    posY: {
-                        type: "integer",
-                        minimum: 0
-                    },
-                    level: {
-                        type: "integer",
-                        minimum: 0
-                    },
+                posX: {
+                    type: "integer",
+                    minimum: 0
+                },
+                posY: {
+                    type: "integer",
+                    minimum: 0
+                },
+                level: {
+                    type: "integer",
+                    minimum: 0
+                },
                 id: {
                     type: "integer",
                     minimum: 0
                 }
             },
-            required: ['type', 'id','posX','posY','level']
+            required: ['type', 'id', 'posX', 'posY', 'level']
 
         },
 
@@ -195,7 +206,7 @@ module.exports = {
                     minimum: 0
                 }
             },
-            required: ['type','linkid', 'orig', 'dest']
+            required: ['type', 'linkid', 'orig', 'dest']
         },
         dellink: {
             properties: {
@@ -215,7 +226,7 @@ module.exports = {
                     minimum: 0
                 }
             },
-            required: ['type','linkid', 'orig', 'dest']
+            required: ['type', 'linkid', 'orig', 'dest']
         }
 
 
