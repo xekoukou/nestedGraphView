@@ -1,4 +1,4 @@
-#include"localdb.h"
+#include"positiondb.h"
 #include"quadtrie-c/quadbit.h"
 #include<stdio.h>
 #include<czmq.h>
