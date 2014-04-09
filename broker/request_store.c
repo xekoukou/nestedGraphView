@@ -1,25 +1,28 @@
-include "request_store.h"
-    void request_store_add(khash_t(rmap) * rmap, const char *id,
-			   zframe_t * address, json_t * request)
+#include "request_store.h"
+
+void request_store_add(khash_t(rmap) * rmap, const char *id,
+		       zframe_t * address, json_t * request)
 {
 
 	khiter_t k;
 	int ret;
 
-	k = kh_put(rmap, rmap, id, ret);
+	k = kh_put(rmap, rmap, id, &ret);
 	kh_value(rmap, k).address = address;
-	kh_value(rmap, k).request = json;
+	kh_value(rmap, k).request = request;
 
 }
 
 void request_store_delete(khash_t(rmap) * rmap, const char *id)
 {
 
+	khiter_t k;
+
 	k = kh_get(rmap, rmap, id);
 	if (k != kh_end(rmap)) {
 
 		req_t *req = &(kh_val(rmap, k));
-		json_decref(req->json);
+		json_decref(req->request);
 		zframe_destroy(&(req->address));
 
 		kh_del(rmap, rmap, k);

@@ -28,12 +28,13 @@ module.exports = {
                         }
 
 
-                    }
+                    },
+		    required:["posX","posY","crit_pos"]
                 }
             }
 
         },
-        required: ["posX", "posY", "level", "zoom"]
+        required: ["level", "searchArray"]
     }
 
     updateRequest: {

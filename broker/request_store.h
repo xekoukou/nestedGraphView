@@ -3,12 +3,15 @@
 
 #include"khash.h"
 #include<jansson.h>
+#include<czmq.h>
 
 struct req_t {
 	zframe_t *address;
 	json_t *request;
 	json_t *response;
-} typedef struct req_t req_t;
+};
+
+typedef struct req_t req_t;
 
 KHASH_MAP_INIT_STR(rmap, req_t);
 

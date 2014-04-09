@@ -10,12 +10,13 @@ void process_request(void *sweb, khash_t(rmap) * rmap, void *spsr, void *sgraph)
 	zframe_t *address = zmsg_unwrap(msg);
 	json_t *json;
 	json_error_t error;
-	json = json_loads(zframe_data(zmsg_first(msg)), 0, &error);
+	json =
+	    json_loads((const char *)zframe_data(zmsg_first(msg)), 0, &error);
 	zmsg_destroy(&msg);
 
 	//add to requst store or drop request if there is previous request
 	const char *id = json_string_value(json_object_get(json, "id"));
-	if (NULL != request_store_req(rmap,id)) {
+	if (NULL != request_store_req(rmap, id)) {
 //key already exists
 //drop request
 		json_decref(json);
@@ -25,31 +26,30 @@ void process_request(void *sweb, khash_t(rmap) * rmap, void *spsr, void *sgraph)
 
 		request_store_add(rmap, id, address, json);
 
-
 		const char *type =
 		    json_string_value(json_object_get(json, "type"));
-		    json_t *browser_request=json_object_get(json,"browser_request");
+		json_t *browser_request =
+		    json_object_get(json, "browser_request");
 		if (strcmp(type, "searchRequest") == 0) {
 			// a search request 
 			//TODO level choosing           
 			json_t *searchArray =
 			    json_object_get(browser_request, "searchArray");
-			json_t *request = Json_object();
+			json_t *request = json_object();
 			json_object_set_new(request, "type", json_integer(0));
 			json_object_set_new(request, "id", json_string(id));
 			json_object_set_new(request, "searchArray",
-					    searchArray(0));
+					    searchArray);
 
-			zmsg_t *req= zmsg_new();
-			char *req_json_str =
-			    json_dumps(request, JSON_COMPACT);
+			zmsg_t *req = zmsg_new();
+			char *req_json_str = json_dumps(request, JSON_COMPACT);
 			zmsg_addstr(req, req_json_str);
 			free(req_json_str);
 			json_decref(request);
-			zmq_send(&req,spsr);
+			zmsg_send(&req, spsr);
 
 		} else {
-		//TODO process request
+			//TODO process request
 			if (strcmp(type, "updateRequest") == 0) {
 				//an update request
 			} else {
@@ -67,29 +67,30 @@ void process_request(void *sweb, khash_t(rmap) * rmap, void *spsr, void *sgraph)
 
 }
 
-void	psr_response(void *spsr, khash_t(rmap) *rmap, void *sweb, void* sgraph){
+void psr_response(void *spsr, khash_t(rmap) * rmap, void *sweb, void *sgraph)
+{
 
-	zmsg_t *msg = zmsq_recv(spsr);
-        json_t *json;
-        json_error_t error;
-        json = json_loads(zframe_data(zmsg_first(msg)), 0, &error);
-        zmsg_destroy(&msg);
+	zmsg_t *msg = zmsg_recv(spsr);
+	json_t *json;
+	json_error_t error;
+	json =
+	    json_loads((const char *)zframe_data(zmsg_first(msg)), 0, &error);
+	zmsg_destroy(&msg);
 
 	//identify the request
-	const char *id = json_string_value(json_object_get(json,id));
+	const char *id = json_string_value(json_object_get(json, "id"));
 //store the locations and request the content
 
-	req_t * req = request_store_req(rmap,id);
+	req_t *req = request_store_req(rmap, id);
 	req->response = json;
 
 	//request the content from the graph database
-	
-
-
 
 }
 
-
+void graph_response(void *sgraph, khash_t(rmap) * rmap, void *sweb, void *spsr)
+{
+}
 
 int main(int argc, char *argv[])
 {
@@ -99,7 +100,9 @@ int main(int argc, char *argv[])
 		    ("\nPlease provide the ip address for the server to bind and the port");
 		exit(1);
 	}
-	//create the server sockets zctx_t * ctx = zctx_new ();
+	zctx_t *ctx = zctx_new();
+
+	//create the server sockets 
 	void *sweb = zsocket_new(ctx, ZMQ_ROUTER);
 	int port = atoi(argv[2]);
 	int rc = zsocket_bind(sweb, "tcp://%s:%d", argv[1], port);
