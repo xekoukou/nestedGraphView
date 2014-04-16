@@ -1,4 +1,0 @@
-Change the requset store to have both the address andid as key because different nodejs servers could use the same ids.
-
-
-Also change the protocol so that all msgs carry the address as well apart from the id.

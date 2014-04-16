@@ -16,4 +16,5 @@ var server = require("./http.js").startHTTPServer(config.address,config.port, ap
 var io = require("./socketIO.js").startSocketIO(server, express, config.secret, sessionStore);
 var dealer = require("./zmq.js").startZMQ(process.argv[2], process.argv[3]);
 //logic
-require("./logic.js").startLogic(io, dealer,config.maxWidth,config.maxHeight);
+var clientNodejsProtocol = require("./clientNodejsProtocol.js");
+require("./logic.js").startLogic(io, dealer,clientNodejsProtocol);

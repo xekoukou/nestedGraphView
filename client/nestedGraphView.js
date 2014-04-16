@@ -6,11 +6,10 @@ var maxHeight = 1080;
 // zoom , the zoom level in centimeters per real centimeter
 // level, the level of abstraction or nest
 
-
-function node(id, parentId, level, childrenIds, summary, content, posX, posY) {
+//TODO this is deprecated , remove it
+function node(id, parentId, childrenIds, summary, content, posX, posY) {
 
     this.id = id;
-    this.level = level;
     this.parentId = parentd;
     this.childrenIds = childrenIds;
     this.posX = Math.floor(posX);
@@ -21,69 +20,7 @@ function node(id, parentId, level, childrenIds, summary, content, posX, posY) {
 }
 
 
-function Data(view) {
-    this.view = view;
-    this.nodes = new Object();
-    this.socket = io.connect('https://' + host + '/nestedGraphView');
 
-
-    // passing data to the closure 
-    var thiss = this;
-
-    this.updateNode = function(updateRequest) {
-
-        this.socket.emit("update", updateRequest);
-
-    }
-
-    this.getData = function(x, y, level, zoom) {
-        this.socket.emit("request", {
-            level: level,
-            searchArray: [{
-                posX: Math.floor(x),
-                posY: Math.floor(y),
-                crit_pos: 64 - Math.floor(Math.max(Math.log(maxWidth * zoom) / Math.LN2, Math.log(maxHeight * zoom) / Math.LN2))
-
-            }]
-        });
-
-    }
-
-
-
-    this.socket.on("data", function(data) {
-
-        //data are objects not jsons
-        //a hash of nodes
-
-        var ids = new Array();
-        var i = 0;
-        Object.keys(data).forEach(function(id) {
-            //remove if it exists 
-            if (id in thiss.nodes) {
-                thiss.view.removeNode(id);
-            }
-
-            if (data[id] == null) {
-                // we have already removed the node
-            } else {
-                //add arrows property
-                data[id].arrows = new Object();
-                thiss.nodes[id] = data[id];
-                ids[i] = id;
-                i++;
-            }
-        });
-        view.hardChangeView(view.cleanUnNodes(ids));
-
-    });
-
-    this.empty = function() {
-
-        Object.keys(this.nodes).forEach(this.view.removeNode(id));
-
-    }
-}
 //rootId has #
 function ArrowCanvas(rootId, nodes) {
 
@@ -261,12 +198,11 @@ function ArrowCanvas(rootId, nodes) {
 }
 
 
-function View(posX, posY, zoom, level, id_connector, width, height) {
+function View(posX, posY, zoom, id_connector, width, height) {
 
     this.posX = Math.floor(posX);
     this.posY = Math.floor(posY);
     this.zoom = zoom;
-    this.level = level;
     this.data = new Data(this);
 
     this.width = width;
@@ -387,7 +323,7 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
         if (e.which == 3) {
 
             $(thiss.rootId).unbind('mousemove');
-            thiss.data.getData(posX, posY, level, zoom);
+            thiss.data.requestData(posX, posY, zoom);
         }
     });
 
@@ -408,17 +344,6 @@ function View(posX, posY, zoom, level, id_connector, width, height) {
             //set keydown actions
             $(this.rootId).on('keydown', function(e) {
 
-                //level change
-                if (event.which == 38) {
-                    level = level + 1;
-                    thiss.data.empty();
-                    thiss.data.getData(posX, posY, level, zoom);
-                }
-                if (event.which == 40) {
-                    level = level - 1;
-                    thiss.data.empty();
-                    thiss.data.getData(posX, posY, level, zoom);
-                }
 
                 //TODO add more actions 
                 //they should only send data to server
@@ -452,7 +377,7 @@ $(this.rootId).on('mousewheel', function(e) {
 
 
 //first actions of the View function
-this.data.getData(this.x, this.y, this.level, this.zoom);
+this.data.requestData(this.x, this.y, this.level, this.zoom);
 
 }
 

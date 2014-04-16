@@ -3,36 +3,29 @@
 #include<jansson.h>
 #include"request_store.h"
 
-void process_request(void *sweb, khash_t(rmap) * rmap, void *spsr, void *sgraph)
+void process_request(void *sweb, req_store_t *req_store, void *spsr, void *sgraph)
 {
 
 	zmsg_t *msg = zmsg_recv(sweb);
 	zframe_t *address = zmsg_unwrap(msg);
-	json_t *json;
+	json_t *req_json;
 	json_error_t error;
 	json =
 	    json_loads((const char *)zframe_data(zmsg_first(msg)), 0, &error);
 	zmsg_destroy(&msg);
 
-	//add to requst store or drop request if there is previous request
-	const char *id = json_string_value(json_object_get(json, "id"));
-	if (NULL != request_store_req(rmap, id)) {
-//key already exists
-//drop request
-		json_decref(json);
-		zframe_destroy(&address);
 
-	} else {
+		request_store_add(req_store, address, req_json);
 
-		request_store_add(rmap, id, address, json);
+                 json_t * request = json_object_get(json_object_get(req_json,"clientRequest"),"request");
 
 		const char *type =
-		    json_string_value(json_object_get(json, "type"));
+		    json__value(json_string_get(request, "type"));
+
 		json_t *browser_request =
 		    json_object_get(json, "browser_request");
 		if (strcmp(type, "searchRequest") == 0) {
 			// a search request 
-			//TODO level choosing           
 			json_t *searchArray =
 			    json_object_get(browser_request, "searchArray");
 			json_t *request = json_object();
@@ -122,7 +115,8 @@ int main(int argc, char *argv[])
 		printf("The broker could't bind to %s:%d", argv[1], port);
 	}
 //initialize request store
-	khash_t(rmap) * rmap = kh_init(rmap);
+req_store_t *req_store;
+request_store_init(&req_store);
 
 	zpoller_t *poller = zpoller_new(sweb, spsr, sgraph);
 	while (1) {
@@ -133,14 +127,14 @@ int main(int argc, char *argv[])
 		if (!zpoller_expired(poller)) {
 
 			if (which == sweb) {
-				process_request(sweb, rmap, spsr, sgraph);
+				process_request(sweb, req_store, spsr, sgraph);
 			}
 			if (which == spsr) {
-				psr_response(spsr, rmap, sweb, sgraph);
+				psr_response(spsr, req_store, sweb, sgraph);
 			}
 
 			if (which == sgraph) {
-				graph_response(sgraph, rmap, sweb, spsr);
+				graph_response(sgraph, req_store, sweb, spsr);
 
 			}
 
