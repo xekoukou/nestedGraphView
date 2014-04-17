@@ -3,85 +3,81 @@
 #include<jansson.h>
 #include"request_store.h"
 
-void process_request(void *sweb, req_store_t *req_store, void *spsr, void *sgraph)
+void process_request(void *sweb, req_store_t * req_store, void *spsr,
+		     void *sgraph)
 {
 
 	zmsg_t *msg = zmsg_recv(sweb);
 	zframe_t *address = zmsg_unwrap(msg);
 	json_t *req_json;
 	json_error_t error;
-	json =
+	req_json =
 	    json_loads((const char *)zframe_data(zmsg_first(msg)), 0, &error);
 	zmsg_destroy(&msg);
 
+	int32_t requestId = request_store_add(req_store, address, req_json);
 
-		request_store_add(req_store, address, req_json);
+	json_t *clientRequest = json_object_get(req_json, "clientRequest");
+	json_t *request = json_object_get(clientRequest, "request");
 
-                 json_t * request = json_object_get(json_object_get(req_json,"clientRequest"),"request");
+	const char *type = json_string_value(json_object_get(request, "type"));
 
-		const char *type =
-		    json__value(json_string_get(request, "type"));
+	if (strcmp(type, "searchRequest") == 0) {
 
-		json_t *browser_request =
-		    json_object_get(json, "browser_request");
-		if (strcmp(type, "searchRequest") == 0) {
-			// a search request 
-			json_t *searchArray =
-			    json_object_get(browser_request, "searchArray");
-			json_t *request = json_object();
-			json_object_set_new(request, "type", json_integer(0));
-			json_object_set_new(request, "id", json_string(id));
-			json_object_set_new(request, "searchArray",
-					    searchArray);
+		json_t *pss_request = json_object();
+		json_object_set_new(pss_request, "requestId",
+				    json_integer(requestId));
+		json_object_set_new(pss_request, "request", request);
 
-			zmsg_t *req = zmsg_new();
-			char *req_json_str = json_dumps(request, JSON_COMPACT);
-			zmsg_addstr(req, req_json_str);
-			free(req_json_str);
-			json_decref(request);
-			zmsg_send(&req, spsr);
+		zmsg_t *req = zmsg_new();
+		char *req_json_str = json_dumps(pss_request, JSON_COMPACT);
+		zmsg_addstr(req, req_json_str);
+		free(req_json_str);
+		json_decref(request);
+		zmsg_send(&req, spsr);
 
+	} else {
+		//TODO process request
+		if (strcmp(type, "updateRequest") == 0) {
+			//an update request
 		} else {
-			//TODO process request
-			if (strcmp(type, "updateRequest") == 0) {
-				//an update request
-			} else {
-				//malformed request
-				printf("i received a malformed request : %s",
-				       type);
-				//delete request 
+			//malformed request
+			printf("i received a malformed request : %s", type);
+			//delete request 
 
-				request_store_delete(rmap, id);
+			request_store_delete(req_store, requestId);
 
-			}
 		}
-
 	}
 
 }
 
-void psr_response(void *spsr, khash_t(rmap) * rmap, void *sweb, void *sgraph)
+void pss_response(void *spsr, req_store_t * req_store, void *sweb, void *sgraph)
 {
 
 	zmsg_t *msg = zmsg_recv(spsr);
-	json_t *json;
 	json_error_t error;
-	json =
+	json_t *pss_resp_json =
 	    json_loads((const char *)zframe_data(zmsg_first(msg)), 0, &error);
 	zmsg_destroy(&msg);
 
 	//identify the request
-	const char *id = json_string_value(json_object_get(json, "id"));
+	int32_t id =
+	    json_integer_value(json_object_get(pss_resp_json, "requestId"));
+
+	json_t *response = json_object_get(pss_resp_json, "response");
+
 //store the locations and request the content
 
-	req_t *req = request_store_req(rmap, id);
-	req->response = json;
+	req_t *req = request_store_req(req_store, id);
+	req->response = response;
 
 	//request the content from the graph database
 
 }
 
-void graph_response(void *sgraph, khash_t(rmap) * rmap, void *sweb, void *spsr)
+void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
+		    void *spsr)
 {
 }
 
@@ -115,8 +111,8 @@ int main(int argc, char *argv[])
 		printf("The broker could't bind to %s:%d", argv[1], port);
 	}
 //initialize request store
-req_store_t *req_store;
-request_store_init(&req_store);
+	req_store_t *req_store;
+	request_store_init(&req_store);
 
 	zpoller_t *poller = zpoller_new(sweb, spsr, sgraph);
 	while (1) {
@@ -130,7 +126,7 @@ request_store_init(&req_store);
 				process_request(sweb, req_store, spsr, sgraph);
 			}
 			if (which == spsr) {
-				psr_response(spsr, req_store, sweb, sgraph);
+				pss_response(spsr, req_store, sweb, sgraph);
 			}
 
 			if (which == sgraph) {

@@ -4,12 +4,12 @@
 #include<czmq.h>
 #include<jansson.h>
 
-json_t *search(quadbit_t * quadbit, json_t * json)
+json_t *search(quadbit_t * quadbit, json_t * request)
 {
-	json_t *response_json = json_object();
+	json_t *response = json_object();
+	json_t *node_array = json_array();
+	json_t *json_searchArray = json_object_get(request, "searchArray");
 
-	json_t *res_data_json = json_array();
-	json_t *json_searchArray = json_object_get(json, "searchArray");
 	int i;
 	for (i = 0; i < json_array_size(json_searchArray); i++) {
 		json_t *set = json_array_get(json_searchArray, i);
@@ -38,7 +38,7 @@ json_t *search(quadbit_t * quadbit, json_t * json)
 						    json_integer(res_item->y));
 				json_object_set_new(node, "id",
 						    json_integer(res_item->id));
-				json_array_append(res_data_json, node);
+				json_array_append(node_array, node);
 
 				res_item =
 				    (pos_id_t *) quadbit_iter_next(&qiter);
@@ -53,13 +53,13 @@ json_t *search(quadbit_t * quadbit, json_t * json)
 					    json_integer(res_item->y));
 			json_object_set_new(node, "id",
 					    json_integer(res_item->id));
-			json_array_append(res_data_json, node);
+			json_array_append(node_array, node);
 		}
-		json_object_set_new(response_json, "data", res_data_json);
-		json_decref(res_data_json);
+		json_object_set_new(response, "node_array", node_array);
+		json_decref(node_array);
 	}
 
-	return response_json;
+	return response;
 
 }
 
@@ -162,47 +162,47 @@ int main(int argc, char *argv[])
 		}
 		if (!zpoller_expired(poller)) {
 
-			zmsg_t *request = zmsg_recv(router);
-			zframe_t *address = zmsg_unwrap(request);
-			json_t *json;
+			zmsg_t *msg = zmsg_recv(router);
+			zframe_t *address = zmsg_unwrap(msg);
+			json_t *request_json;
 			json_error_t error;
-			json =
-			    json_loads((const char *)
-				       zframe_data(zmsg_first(request)), 0,
-				       &error);
-			zmsg_destroy(&request);
+			request_json = json_loads((const char *)
+						  zframe_data(zmsg_first(msg)),
+						  0, &error);
+			zmsg_destroy(&msg);
 
-			json_t *response_json;
-			int type =
-			    json_integer_value(json_object_get(json, "type"));
-			switch (type) {
+			json_t *response;
 
-			case 0:
-				response_json = search(quadbit, json);
-			case 1:
-				response_json =
-				    insert(positiondb, quadbit, json);
+			json_t *request =
+			    json_object_get(request_json, "request");
+			const char *type =
+			    json_string_value(json_object_get(request, "type"));
 
-			case 2:
-				response_json =
-				    delete(positiondb, quadbit, json);
+			if (strcmp(type, "searchRequest") == 0) {
+
+				response = search(quadbit, request);
+			} else {
+
+//TODO Do the remaining requests
 			}
 
-			json_object_set_new(response_json, "id",
-					    json_object_get(json, "id"));
-			json_object_set_new(response_json, "type",
-					    json_integer(type));
+			json_t *response_json = json_object();
 
-			zmsg_t *response = zmsg_new();
+			json_object_set_new(response_json, "requestId",
+					    json_object_get(request_json,
+							    "requestId"));
+			json_object_set_new(response_json, "response",
+					    response);
+
+			zmsg_t *resp_msg = zmsg_new();
 			char *res_json_str =
 			    json_dumps(response_json, JSON_COMPACT);
-			zmsg_addstr(response, res_json_str);
+			zmsg_addstr(resp_msg, res_json_str);
 			free(res_json_str);
-			json_decref(response_json);
 
-			json_decref(json);
-			zmsg_wrap(response, address);
-			zmsg_send(&response, router);
+			json_decref(request_json);
+			zmsg_wrap(resp_msg, address);
+			zmsg_send(&resp_msg, router);
 		}
 	}
 

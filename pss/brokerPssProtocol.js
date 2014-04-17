@@ -4,7 +4,7 @@ module.exports {
         type: "object",
         properties: {
             requestId: {
-                type: "string"
+                type: "integer"
             },
             request: {
                 type: "object",
@@ -27,36 +27,54 @@ module.exports {
     response: {
         type: "object",
         properties: {
-            'type': {
-                'enum': ['searchResponse']
+            requestId: {
+                type: "integer"
             },
-            nodeArray: {
-                type: "array",
-                minItems: 0,
-                items: {
-                    type: "object",
-                    properties: {
-                        id: {
-                            type: "integer"
-                        },
-                        posX: {
-                            type: "integer",
-                            minimum: 0
-                        },
-                        posY: {
-                            type: "integer",
-                            minimum: 0
-                        }
-
-
-                    },
-                    required: ["id", "posX", "posY"]
-                }
+            response: {
+                type: "object",
+                oneof: [{
+                    "$ref": "$/definitions/searchResponse"
+                }]
             }
-
         },
-        required: ["type", "nodeArray"]
+        required: ["requestId", "response"]
+    },
 
+    definitions: [
+
+        response: {
+            type: "object",
+            properties: {
+                'type': {
+                    'enum': ['searchResponse']
+                },
+                nodeArray: {
+                    type: "array",
+                    minItems: 0,
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: {
+                                type: "integer"
+                            },
+                            posX: {
+                                type: "integer",
+                                minimum: 0
+                            },
+                            posY: {
+                                type: "integer",
+                                minimum: 0
+                            }
+
+
+                        },
+                        required: ["id", "posX", "posY"]
+                    }
+                }
+
+            },
+            required: ["type", "nodeArray"]
+
+        }
     }
-
 }

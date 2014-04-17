@@ -1,4 +1,4 @@
-//clientProtocol.js
+//clientNodejsProtocol.js
 module.exports = {
 
     request: {
