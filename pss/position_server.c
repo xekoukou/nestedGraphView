@@ -200,10 +200,11 @@ int main(int argc, char *argv[])
 			zmsg_addstr(resp_msg, res_json_str);
 			free(res_json_str);
 
-			json_decref(request_json);
 			zmsg_wrap(resp_msg, address);
 			zmsg_send(&resp_msg, router);
+
+			json_decref(request_json);
+			json_decref(response_json);
 		}
 	}
-
 }

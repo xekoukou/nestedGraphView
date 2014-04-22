@@ -61,40 +61,37 @@ function Data(view) {
 
     this.socket.on("response", function(data) {
 
-      
+
+        //TODO do something with the id
+        var clientRequestId = data.clientRequestId;
+
+        if (data.response.type == "searchResponse") {
+
+            var nodeArray = data.response.nodeArray;
 
 
-        var ids = new Array();
+            var ids = new Array();
 
-        var nuNodes = data.nuNodes;
 
-        for (i = 0; i < nuNodes.length, i++) {
-            var node = nuNodes.indeof(i);
-            var id = node.id;
-            //remove if it exists 
-            if (id in thiss.nodes) {
-                thiss.view.removeNode(id);
-            }
-            //add arrows property
-            node.arrows = new Object();
-            thiss.nodes[id] = node;
-            ids[i] = id;
+            for (i = 0; i < nodeArray.length, i++) {
+                var node = nodeArray.indeof(i);
+                var id = node.id;
+                //remove if it exists 
+                if (id in thiss.nodes) {
+                    thiss.view.removeNode(id);
+                }
+                //add arrows property
+                node.arrows = new Object();
+                thiss.nodes[id] = node;
+                ids[i] = id;
 
-        }
-
-        var deletedNodes = data.deletedNodes;
-
-        for (i = 0; i < deletedNodes.length, i++) {
-            var node = deletedNodes.indeof(i);
-            var id = node.id;
-            //remove if it exists 
-            if (id in thiss.nodes) {
-                thiss.view.removeNode(id);
             }
 
-        }
-        view.hardChangeView(view.cleanUnNodes(ids));
+            view.hardChangeView(view.cleanUnNodes(ids));
+        } else {
+            //TODO handle the remaining cases
 
+        }
     });
 
 
