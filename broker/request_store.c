@@ -8,8 +8,8 @@ void request_store_init(req_store_t ** req_store)
 	(*req_store)->next_req_id = 1;
 }
 
-int32_t request_store_add(req_store_t * req_store,
-			  zframe_t * address, json_t * request)
+int32_t
+request_store_add(req_store_t * req_store, zframe_t * address, json_t * request)
 {
 
 	khiter_t k;

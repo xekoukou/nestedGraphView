@@ -24,14 +24,34 @@ function Data(view) {
         thiss.clientRequestId++;
     }
 
+
+    this.postNewNode = function(x, y, parentId, nodeData) {
+
+        this.socket.emit("request", {
+                clientRequestId: thiss.clientRequestId,
+                request: {
+                    type: "newNode",
+                    node: {
+                        posX: x,
+                        posY: y,
+                        parentId: parentId,
+                        nodeData: nodeData
+                    }
+                }
+            }; thiss.clientRequestId++;
+
+        );
+
+    }
+
     this.socket.on("newData", function(data) {
 
         var ids = new Array();
 
-        var nuNodes = data.nuNodes;
+        var newNodes = data.newNodes;
 
-        for (i = 0; i < nuNodes.length, i++) {
-            var node = nuNodes.indeof(i);
+        for (i = 0; i < newNodes.length, i++) {
+            var node = newNodes.indeof(i);
             var id = node.id;
             //remove if it exists 
             if (id in thiss.nodes) {
@@ -90,6 +110,7 @@ function Data(view) {
             view.hardChangeView(view.cleanUnNodes(ids));
         } else {
             //TODO handle the remaining cases
+            // there are no other cases at the moment
 
         }
     });

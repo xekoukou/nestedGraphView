@@ -43,9 +43,12 @@ module.exports = {
             "type": {
                 "enum": ["newData"]
             },
-            sessionId: {
-                type: "string" //I suppose
-
+            sessionIds: {
+                type: "array",
+                minItems: 1,
+                items: {
+                    type: "string" //I suppose
+                }
             },
             newData: {
                 "$ref": "clientNodejsProtocol.js#/newData"

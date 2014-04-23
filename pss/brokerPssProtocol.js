@@ -11,7 +11,7 @@ module.exports {
                 oneof: [{
                         "$ref": "../clientNodejsProtocol.js#/definitions/searchRequest"
                     }, {
-                        "$ref": ""
+                        "$ref": "#/definitions/newNodeRequest"
                     }, {
                         "$ref": ""
                     }
@@ -34,7 +34,10 @@ module.exports {
                 type: "object",
                 oneof: [{
                     "$ref": "$/definitions/searchResponse"
-                }]
+                },
+{
+                    "$ref": "$/definitions/newNodeResponse"
+}]
             }
         },
         required: ["requestId", "response"]
@@ -42,7 +45,7 @@ module.exports {
 
     definitions: [
 
-        response: {
+        searchResponse: {
             type: "object",
             properties: {
                 'type': {
@@ -75,6 +78,49 @@ module.exports {
             },
             required: ["type", "nodeArray"]
 
-        }
-    }
+        },
+
+        newNodeRequest: {
+            type: "object",
+            properties: {
+                "type": {
+                    "enum": ["newNodeRequest"]
+                },
+                node: {
+                    type: "object",
+                    properties: {
+                        id: {
+                            type: "integer"
+                        },
+                        posX: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        posY: {
+                            type: "integer",
+                            minimum: 0
+                        }
+
+
+                    },
+                    required: ["id", "posX", "posY"]
+                }
+            },
+            required: ["type","node"]
+        },
+
+      newNodeResponse:{
+type:"object",
+properties:{
+type:{
+"enum":["newNodeResponse"]
+},
+ack:{
+"enum":["ok","fail"]
+}
+},
+required:["ack"]
+}
+    ]
+
 }

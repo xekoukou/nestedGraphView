@@ -28,7 +28,10 @@ module.exports = {
                 io.of('/nestedGraphView').sockets.socket(json_recv.sessionId).emit('response', json_recv.clientResponse);
             } else {
                 if (json_recv.type == 'newData') {
-                    io.of('/nestedGraphView').sockets.socket(json_recv.sessionId).emit('newData', json_recv.newData);
+                    var i;
+                    for (i = 0; i < json_recv.sessionIds.length; i++) {
+                        io.of('/nestedGraphView').sockets.socket(json_recv.sessionIds[i]).emit('newData', json_recv.newData);
+                    }
                 }
             }
         });

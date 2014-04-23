@@ -6,19 +6,6 @@ var maxHeight = 1080;
 // zoom , the zoom level in centimeters per real centimeter
 // level, the level of abstraction or nest
 
-//TODO this is deprecated , remove it
-function node(id, parentId, childrenIds, summary, content, posX, posY) {
-
-    this.id = id;
-    this.parentId = parentd;
-    this.childrenIds = childrenIds;
-    this.posX = Math.floor(posX);
-    this.posY = Math.floor(posY);
-    this.content = '<div class = "nestedGraphNodeContent ' + id + '" >' + content + '</div>';
-    this.summary = '<div class = "nestedGraphNode ' + id + '" >' + summary + '</div>';
-    this.arrows = new Object();
-}
-
 
 
 //rootId has #
@@ -259,8 +246,8 @@ function View(posX, posY, zoom, id_connector, width, height) {
         for (var i = 0; i < changedIds.length; i++) {
 
             var node = this.data.nodes[changedIds[i]];
-            $(this.rootId).append(node.summary);
-            $(this.rootId).append(node.content);
+            $(this.rootId).append(node.nodeData.summary);
+            $(this.rootId).append(node.nodeData.content);
 
             //make things draggable
             $('.' + node.id + '.nestedGraphNode').draggable();

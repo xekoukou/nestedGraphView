@@ -37,10 +37,34 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 		json_decref(pss_request);
 
 	} else {
-		//TODO process request
-		if (strcmp(type, "updateRequest") == 0) {
-			//an update request
+		if (strcmp(type, "newNode") == 0) {
+
+			json_t *graph_request = json_object();
+			json_object_set_new(graph_request, "requestId",
+					    json_integer(requestId));
+			json_t *newNodeRequest = json_object();
+			json_object_set_new(newNodeRequest, "type",
+					    json_string("newNodeRequest"));
+			json_object_set(newNodeRequest, "parentId",
+					json_object_get(json_object_get
+							(request, "node"),
+							"parentId"));
+			json_object_set(newNodeRequest, "nodeData",
+					json_object_get(json_object_get
+							(request, "node"),
+							"nodeData"));
+
+			zmsg_t *req = zmsg_new();
+			char *graph_req_str =
+			    json_dumps(graph_request, JSON_COMPACT);
+			zmsg_addstr(req, graph_req_str);
+			free(graph_req_str);
+			zmsg_send(&req, sgraph);
+
+			json_decref(graph_request);
+
 		} else {
+			//TODO process request
 			//malformed request
 			printf("i received a malformed request : %s", type);
 			//delete request 
@@ -71,6 +95,7 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 
 	json_t *response = json_object_get(pss_resp_json, "response");
 	json_incref(response);
+	json_decref(pss_resp_json);
 
 	const char *resp_type =
 	    json_string_value(json_object_get(response, "type"));
@@ -87,7 +112,6 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 //store the locations and request the content
 
 			req->response = response;
-			json_decref(pss_resp_json);
 
 			json_t *nodeArray =
 			    json_object_get(response, "nodeArray");
@@ -125,14 +149,77 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 
 		}
 	} else {
+		if (strcmp(resp_type, "newNodeResponse") == 0) {
 
+			if (strcmp(req_type, "newNode") == 0) {
+
+				const char *ack =
+				    json_string_value(json_object_get
+						      (response, "ack"));
+
+				if (strcmp(ack, "ok") == 0) {
+
+					json_t *web_resp = json_object();
+					json_object_set_new(web_resp, "type",
+							    json_string
+							    ("newData"));
+//TODO at the moment only the original node gets the update, which is good enough for me
+					json_t *sessionIds = json_array();
+					json_array_append(sessionIds,
+							  json_object_get(req->
+									  request,
+									  "sessionId"));
+					json_object_set_new(web_resp,
+							    "sessionIds",
+							    sessionIds);
+
+					json_t *newData = json_object();
+					json_t *newNodes = json_array();
+					json_array_append(newNodes,
+							  json_object_get
+							  (json_object_get
+							   (req->request,
+							    "request"),
+							   "node"));
+					json_object_set_new(newData, "newNodes",
+							    newNodes);
+					json_object_set_new(newData,
+							    "deletedNodes",
+							    json_object());
+
+					json_object_set_new(web_resp, "newData",
+							    newData);
+
+					zmsg_t *res = zmsg_new();
+					char *web_res_str =
+					    json_dumps(web_resp, JSON_COMPACT);
+					zmsg_addstr(res, web_res_str);
+					free(web_res_str);
+					zmsg_send(&res, sweb);
+					json_decref(web_resp);
+
+				} else {
+
+					if (strcmp(ack, "fail") == 0) {
+//TODO ask the graph to delete the node
+					}
+
+				}
+				free((char *)ack);
+				json_decref(req->request);
+				json_decref(req->response);
+				request_store_delete(req_store, id);
+
+			}
+		} else {
+		}
 	}
 	free((char *)resp_type);
 	free((char *)req_type);
 }
 
-void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
-		    void *spss)
+void
+graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 {
 
 	zmsg_t *msg = zmsg_recv(sgraph);
@@ -161,8 +248,6 @@ void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
 
 	if (strcmp(resp_type, "retrieveResponse") == 0) {
 		if (strcmp(req_type, "searchRequest") == 0) {
-
-//a retrieveResponse might not have originated from a searchRequest
 
 			json_t *nodeArray =
 			    json_object_get(req->response, "nodeArray");
@@ -221,27 +306,57 @@ void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
 			json_object_set_new(clientResponse, "response",
 					    cl_response);
 			zmsg_t *res = zmsg_new();
-			char
-			*web_res_str = json_dumps(web_resp,
-						  JSON_COMPACT);
+			char *web_res_str = json_dumps(web_resp,
+						       JSON_COMPACT);
 			zmsg_addstr(res, web_res_str);
 			free(web_res_str);
 			zmsg_wrap(res, req->address);
 			zmsg_send(&res, sweb);
 			json_decref(req->request);
 			json_decref(req->response);
+			request_store_delete(req_store, id);
 			json_decref(graph_resp_json);
+			json_decref(web_resp);
 		}
 	} else {
 
+		if (strcmp(resp_type, "newNodeResponse") == 0) {
+			if (strcmp(req_type, "newNode") == 0) {
+
+				json_t *pss_request = json_object();
+				json_object_set_new(pss_request, "type",
+						    json_string
+						    ("newNodeRequest"));
+				json_object_set(pss_request, "id",
+						json_object_get(response,
+								"id"));
+				json_object_set(pss_request, "posX",
+						json_object_get(request,
+								"posX"));
+				json_object_set(pss_request, "posY",
+						json_object_get(request,
+								"posY"));
+
+				zmsg_t *req = zmsg_new();
+				char *pss_req_str = json_dumps(pss_request,
+							       JSON_COMPACT);
+				zmsg_addstr(req, pss_req_str);
+				free(pss_req_str);
+				zmsg_send(&req, spss);
+				json_decref(graph_resp_json);
+				json_decref(pss_request);
+
+			}
+		} else {
+
+		}
 	}
 
 	free((char *)resp_type);
 	free((char *)req_type);
 }
 
-int main(int argc, char
-	 *argv[])
+int main(int argc, char *argv[])
 {
 
 	if (argc != 3) {

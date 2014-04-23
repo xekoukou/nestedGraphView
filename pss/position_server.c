@@ -66,29 +66,29 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 json_t *insert(positiondb_t * positiondb, quadbit_t * quadbit, json_t * json)
 {
 
-	json_t *json_data = json_object_get(json, "data");
+	json_t *json_data = json_object_get(json, "node");
 
 	pos_id_t *item = malloc(sizeof(pos_id_t));
-	item->x = json_integer_value(json_object_get(json_data, "x"));
-	item->y = json_integer_value(json_object_get(json_data, "y"));
+	item->x = json_integer_value(json_object_get(json_data, "posX"));
+	item->y = json_integer_value(json_object_get(json_data, "posY"));
 	item->id = json_integer_value(json_object_get(json_data, "id"));
 
 //do not accept a new node with the same location
 	if (quadbit_search(quadbit, (quadbit_item_t *) item)) {
-//TODO need to send a meaningfull response
-		return NULL;
+
+		json_t *response = json_object();
+		json_object_set_new(response, "type",
+				    json_string("newNodeResponse"));
+		json_object_set_new(response, "ack", json_string("failed"));
+		return response;
 	}
 	positiondb_insert_pos_id(positiondb, item);
 	quadbit_insert(quadbit, (quadbit_item_t *) item);
 
-	//we need a hash because the client accepts a hash
-	json_t *json_data_id_hash = json_object();
-	char id[64];
-	sprintf(id, "%ld", item->id);
-	json_object_set_new(json_data_id_hash, id, json_data);
-	json_t *response_json = json_object();
-	json_object_set_new(response_json, "data", json_data_id_hash);
-	return response_json;
+	json_t *response = json_object();
+	json_object_set_new(response, "type", json_string("newNodeResponse"));
+	json_object_set_new(response, "ack", json_string("ok"));
+	return response;
 
 }
 
@@ -183,14 +183,23 @@ int main(int argc, char *argv[])
 				response = search(quadbit, request);
 			} else {
 
+				if (strcmp(type, "newNodeRequest") == 0) {
+
+					response =
+					    insert(positiondb, quadbit,
+						   request);
+
+				} else {
+
 //TODO Do the remaining requests
+				}
 			}
 
 			json_t *response_json = json_object();
 
 			json_object_set_new(response_json, "requestId",
-					    json_object_get(request_json,
-							    "requestId"));
+					    json_object_get
+					    (request_json, "requestId"));
 			json_object_set_new(response_json, "response",
 					    response);
 
@@ -203,8 +212,8 @@ int main(int argc, char *argv[])
 			zmsg_wrap(resp_msg, address);
 			zmsg_send(&resp_msg, router);
 
-			json_decref(request_json);
 			json_decref(response_json);
+			json_decref(request_json);
 		}
 	}
 }

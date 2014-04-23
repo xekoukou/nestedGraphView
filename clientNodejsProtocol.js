@@ -12,7 +12,17 @@ module.exports = {
                 oneof: [{
                     '$ref': '#/definitions/searchRequest'
                 }, {
-                    '#ref': '#/definitions/updateRequest'
+                    '$ref': '#/definitions/newNode'
+                }, {
+                    '#ref': '#/definitions/delNode'
+                }, {
+                    '$ref': '#/definitions/newPosition'
+                }, {
+                    '$ref': '#/definitions/newNodeData'
+                }, {
+                    '$ref': '#/definitions/newlink'
+                }, {
+                    '#ref': '#/definitions/dellink'
                 }],
             }
         },
@@ -55,46 +65,35 @@ module.exports = {
             required: ["type", "searchArray"]
         },
 
-        updateRequest: {
-            type: 'Object',
-            propeties: {
-                'type': {
-                    'enum': ['updateRequest']
-                },
-                request: {
-                    type: 'object',
-                    oneof: [{
-                        '$ref': '#/definitions/newNode'
-                    }, {
-                        '$ref': '#/definitions/updateNode'
-                    }, {
-                        '#ref': '#/definitions/delNode'
-                    }],
-                }
-            },
-            required: ['type', 'request']
-        },
-
         'newNode': {
             type: "object",
             properties: {
                 'type': {
                     'enum': ['newNode']
                 },
-                posX: {
-                    type: "integer",
-                    minimum: 0
-                },
-                posY: {
-                    type: "integer",
-                    minimum: 0
-                },
-                parentId: {
-                    type: "integer",
-                    minimum: 0
+                node: {
+                    type: "object",
+                    properties: {
+                        posX: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        posY: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        parentId: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        nodeData: {
+                            type: "object",
+                        }
+                    },
+                    required: ['type', 'posX', 'posY', 'nodeData']
                 }
             },
-            required: ['type', 'posX', 'posY', 'parentId']
+            required: ['type', "node"]
         },
         'delNode': {
             type: "object",
@@ -102,56 +101,24 @@ module.exports = {
                 'type': {
                     'enum': ['delNode']
                 },
-                posX: {
-                    type: "integer",
-                    minimum: 0
-                },
-                posY: {
-                    type: "integer",
-                    minimum: 0
-                },
                 id: {
                     type: "integer",
                     minimum: 0
                 }
             },
-            required: ['type', 'id', 'posX', 'posY', ]
+            required: ['type', 'id']
 
         },
 
-        'updateNode': {
-            type: 'object',
-            properties: {
-                'type': {
-                    'enum': ['updateNode']
-                },
-                request: {
-                    type: 'object',
-                    oneof: [{
-                            '$ref': '#/definitions/newPosition'
-                        }, {
-                            '$ref': '#/definitions/newContent'
-                        }, {
-                            '$ref': '#/definitions/newSummary'
-                        }, {
-                            '$ref': '#/definitions/newParentId'
-                        }, {
-                            '$ref': '#/definitions/newlink'
-                        }, {
-                            '#ref': '#/definitions/dellink'
-                        }
-
-                    ]
-
-                }
-            },
-            required: ['type', 'request']
-        },
         newPosition: {
             type: "object",
             properties: {
                 'type': {
                     'enum': ['newPosition']
+                },
+                id: {
+                    type: "integer",
+                    minimum: 0
                 },
                 posX: {
                     type: 'integer',
@@ -162,59 +129,30 @@ module.exports = {
                     minimum: 0
                 }
             }
-            required: ['type', 'posX', 'posY']
+            required: ['type', 'id', 'posX', 'posY']
         },
-        newContent: {
+        newNodeData: {
             type: "object",
             properties: {
                 'type': {
-                    'enum': ['newContent']
+                    'enum': ['newNodeData']
                 },
-                content: {
-                    type: 'String',
+                id: {
+                    type: "integer",
+                    minimum: 0
+                },
+                nodeData: {
+                    type: 'object',
 
                 }
             },
             required: ['type', 'content']
-        },
-        newSummary: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newSummary']
-                },
-                summary: {
-                    type: 'String',
-
-                }
-            },
-            required: ['type', 'summary']
-        },
-        newParentId: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newParentId']
-                },
-                parentId: {
-                    type: 'integer',
-                    minimum: 1
-                }
-
-
-            },
-            required: ['type', 'parentId']
-
         },
         newlink: {
             type: "object",
             properties: {
                 'type': {
                     'enum': ['newlink']
-                },
-                'linkid': {
-                    type: 'integer',
-                    minimum: 0
                 },
                 'orig': {
                     type: 'integer',
@@ -223,9 +161,12 @@ module.exports = {
                 'dest': {
                     type: 'integer',
                     minimum: 0
+                },
+                linkData: {
+                    type: "object"
                 }
             },
-            required: ['type', 'linkid', 'orig', 'dest']
+            required: ['type', 'orig', 'dest', 'linkData']
         },
         dellink: {
             type: "object",
@@ -236,17 +177,9 @@ module.exports = {
                 'linkid': {
                     type: 'integer',
                     minimum: 0
-                },
-                'orig': {
-                    type: 'integer',
-                    minimum: 0
-                },
-                'dest': {
-                    type: 'integer',
-                    minimum: 0
                 }
             },
-            required: ['type', 'linkid', 'orig', 'dest']
+            required: ['type', 'linkid']
         }
     ],
 
@@ -260,9 +193,7 @@ module.exports = {
                 type: 'object',
                 oneof: [{
                     '$ref': '#/rDefinitions/searchResponse'
-                }, {
-                    '#ref': '#/rDefinitions/updateResponse'
-                }],
+                }]
             }
         },
         required: ['clientRequestId', 'response']
@@ -305,208 +236,19 @@ module.exports = {
 
             },
             required: ["type", "nodeArray"]
-        },
-        //TODO this is replica of the above code , change it to be the responses to the requests
-        updateRequest: {
-            type: 'Object',
-            propeties: {
-                'type': {
-                    'enum': ['updateRequest']
-                },
-                request: {
-                    type: 'object',
-                    oneof: [{
-                        '$ref': '#/definitions/newNode'
-                    }, {
-                        '$ref': '#/definitions/updateNode'
-                    }, {
-                        '#ref': '#/definitions/delNode'
-                    }],
-                }
-            },
-            required: ['type', 'request']
-        },
-
-        'newNode': {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newNode']
-                },
-                posX: {
-                    type: "integer",
-                    minimum: 0
-                },
-                posY: {
-                    type: "integer",
-                    minimum: 0
-                },
-                parentId: {
-                    type: "integer",
-                    minimum: 0
-                }
-            },
-            required: ['type', 'posX', 'posY', 'parentId']
-        },
-        'delNode': {
-            type: "object",
-            properties: {
-
-                'type': {
-                    'enum': ['delNode']
-                },
-                posX: {
-                    type: "integer",
-                    minimum: 0
-                },
-                posY: {
-                    type: "integer",
-                    minimum: 0
-                },
-                id: {
-                    type: "integer",
-                    minimum: 0
-                }
-            },
-            required: ['type', 'id', 'posX', 'posY', ]
-
-        },
-
-        'updateNode': {
-            type: 'object',
-            properties: {
-                'type': {
-                    'enum': ['updateNode']
-                },
-                request: {
-                    type: 'object',
-                    oneof: [{
-                            '$ref': '#/definitions/newPosition'
-                        }, {
-                            '$ref': '#/definitions/newContent'
-                        }, {
-                            '$ref': '#/definitions/newSummary'
-                        }, {
-                            '$ref': '#/definitions/newParentId'
-                        }, {
-                            '$ref': '#/definitions/newlink'
-                        }, {
-                            '#ref': '#/definitions/dellink'
-                        }
-
-                    ]
-
-                }
-            },
-            required: ['type', 'request']
-        },
-        newPosition: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newPosition']
-                },
-                posX: {
-                    type: 'integer',
-                    minimum: 0
-                }
-                posY: {
-                    type: 'integer',
-                    minimum: 0
-                }
-            }
-            required: ['type', 'posX', 'posY']
-        },
-        newContent: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newContent']
-                },
-                content: {
-                    type: 'String',
-
-                }
-            },
-            required: ['type', 'content']
-        },
-        newSummary: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newSummary']
-                },
-                summary: {
-                    type: 'String',
-
-                }
-            },
-            required: ['type', 'summary']
-        },
-        newParentId: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newParentId']
-                },
-                parentId: {
-                    type: 'integer',
-                    minimum: 1
-                }
-
-
-            },
-            required: ['type', 'parentId']
-
-        },
-        newlink: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['newlink']
-                },
-                'linkid': {
-                    type: 'integer',
-                    minimum: 0
-                },
-                'orig': {
-                    type: 'integer',
-                    minimum: 0
-                },
-                'dest': {
-                    type: 'integer',
-                    minimum: 0
-                }
-            },
-            required: ['type', 'linkid', 'orig', 'dest']
-        },
-        dellink: {
-            type: "object",
-            properties: {
-                'type': {
-                    'enum': ['dellink']
-                },
-                'linkid': {
-                    type: 'integer',
-                    minimum: 0
-                },
-                'orig': {
-                    type: 'integer',
-                    minimum: 0
-                },
-                'dest': {
-                    type: 'integer',
-                    minimum: 0
-                }
-            },
-            required: ['type', 'linkid', 'orig', 'dest']
         }
-    ],
+    ]
+
+
+    //There are no responses for the rest of te requests. If data have been saved one would simply check that they have by looking the graph.
+
+
+    ,
     //this is sent to the client when changes have been made to the location he is viewing. it is sent without a prior request
     newData: {
         type: "object",
-//new or updated nodes
-        nuNodes: {
+        //new or updated nodes
+        newNodes: {
             type: "array",
             minItems: 0,
             items: {
