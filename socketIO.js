@@ -1,6 +1,6 @@
 module.exports = {
 
-    startSocketIO: function(server, express,passport, secret, sessionStore) {
+    startSocketIO: function(server, express, passport, secret, sessionStore) {
 
         var io = require('socket.io').listen(server);
 
@@ -27,7 +27,7 @@ module.exports = {
 
         function onAuthorizeFail(data, message, error, accept) {
             if (error) {
-                throw new Error(message); 
+                throw new Error(message);
             }
             console.log('failed connection to socket.io:', message);
 

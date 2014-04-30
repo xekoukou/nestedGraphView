@@ -15,15 +15,15 @@ module.exports = {
                 json_request.sessionId = socket.id;
                 json_request.clientRequest = data;
                 dealer.send(JSON.stringify(json_request));
-console.log("nodejs sent:" + JSON.stringify(json_request));
+                console.log("nodejs sent:" + JSON.stringify(json_request));
 
             });
         });
 
 
 
-        dealer.on('message', function(zeroframe,msg) {
-     console.log("nodejs received:" + msg.toString());
+        dealer.on('message', function(zeroframe, msg) {
+            console.log("nodejs received:" + msg.toString());
 
             var json_recv = JSON.parse(msg.toString());
 
