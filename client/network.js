@@ -1,7 +1,7 @@
 function Data(view) {
     this.view = view;
     this.nodes = new Object();
-    this.socket = io.connect('https://' + host + '/nestedGraphView');
+    this.socket = io.connect('https://' + window.location.host + '/nestedGraphView');
 
     this.clientRequestId = 0;
 
@@ -12,7 +12,7 @@ function Data(view) {
         this.socket.emit("request", {
             clientRequestId: thiss.clientRequestId,
             request: {
-                type: "SearchRequest",
+                type: "searchRequest",
                 searchArray: [{
                     posX: Math.floor(x),
                     posY: Math.floor(y),
@@ -25,7 +25,7 @@ function Data(view) {
     }
 
 
-    this.postNewNode = function(x, y, parentId, nodeData) {
+    this.postNewNode = function(x, y, node) {
 
         this.socket.emit("request", {
                 clientRequestId: thiss.clientRequestId,
@@ -34,13 +34,12 @@ function Data(view) {
                     node: {
                         posX: x,
                         posY: y,
-                        parentId: parentId,
-                        nodeData: nodeData
+                        node: node
                     }
                 }
-            }; thiss.clientRequestId++;
-
-        );
+            }); 
+        console.log("request transmitted");
+        thiss.clientRequestId++;
 
     }
 
@@ -50,7 +49,7 @@ function Data(view) {
 
         var newNodes = data.newNodes;
 
-        for (i = 0; i < newNodes.length, i++) {
+        for (i = 0; i < newNodes.length; i++) {
             var node = newNodes.indeof(i);
             var id = node.id;
             //remove if it exists 
@@ -66,7 +65,7 @@ function Data(view) {
 
         var deletedNodes = data.deletedNodes;
 
-        for (i = 0; i < deletedNodes.length, i++) {
+        for (i = 0; i < deletedNodes.length; i++) {
             var node = deletedNodes.indeof(i);
             var id = node.id;
             //remove if it exists 
@@ -93,7 +92,7 @@ function Data(view) {
             var ids = new Array();
 
 
-            for (i = 0; i < nodeArray.length, i++) {
+            for (i = 0; i < nodeArray.length; i++) {
                 var node = nodeArray.indeof(i);
                 var id = node.id;
                 //remove if it exists 

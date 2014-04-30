@@ -34,8 +34,9 @@ void request_store_delete(req_store_t * req_store, int32_t id)
 
 		req_t *req = &(kh_val(req_store->rmap, k));
 		json_decref(req->request);
-		zframe_destroy(&(req->address));
-
+		if (req->response) {
+			json_decref(req->response);
+		}
 		kh_del(rmap, req_store->rmap, k);
 
 	} else {

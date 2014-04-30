@@ -1,6 +1,6 @@
 module.exports = {
 
-    startPassport: function(passport, app,address,port, sessionExpiry, users) {
+    startPassport: function(passport, address,port, sessionExpiry, users) {
 
         var GoogleStrategy = require('passport-google').Strategy;
 
@@ -26,13 +26,20 @@ module.exports = {
 
 
         passport.serializeUser(function(user, done) {
+            console.log(user.profile.emails[0].value);
             done(null, user.profile.emails[0].value);
         });
 
         passport.deserializeUser(function(id, done) {
+             console.log("inside deserialization:" +id);
             user = users[id];
+            console.log("user:"+user);
             done(null, user);
         });
+
+     },
+
+     appAuth: function(passport ,app) {
 
         app.get('/auth/google', passport.authenticate('google'));
 

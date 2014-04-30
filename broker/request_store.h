@@ -28,6 +28,7 @@ void request_store_init(req_store_t ** req_store);
 int32_t request_store_add(req_store_t * req_store, zframe_t * address,
 			  json_t * request);
 
+//doesn't delete the address frame
 void request_store_delete(req_store_t * req_store, int32_t id);
 
 req_t *request_store_req(req_store_t * req_store, int32_t id);

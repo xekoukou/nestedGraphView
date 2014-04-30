@@ -1,6 +1,7 @@
 module.exports = {
 
     startLogic: function(io, dealer, clientNodejsProtocol) {
+        var validator = require('json-schema');
 
         io.of('/nestedGraphView').on('connection', function(socket) {
             socket.on('request', function(data) {
@@ -14,18 +15,21 @@ module.exports = {
                 json_request.sessionId = socket.id;
                 json_request.clientRequest = data;
                 dealer.send(JSON.stringify(json_request));
-
+console.log("nodejs sent:" + JSON.stringify(json_request));
 
             });
         });
 
 
 
-        dealer.on('message', function(msg) {
-            var json_recv = JSON.parse(msg.toString);
+        dealer.on('message', function(zeroframe,msg) {
+     console.log("nodejs received:" + msg.toString());
+
+            var json_recv = JSON.parse(msg.toString());
+
 
             if (json_recv.type == 'response') {
-                io.of('/nestedGraphView').sockets.socket(json_recv.sessionId).emit('response', json_recv.clientResponse);
+                io.sockets.socket(json_recv.sessionId).emit('response', json_recv.clientResponse);
             } else {
                 if (json_recv.type == 'newData') {
                     var i;

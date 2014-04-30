@@ -29,7 +29,7 @@ module.exports = {
         required: ['clientRequestId', 'request']
     },
 
-    definitions: [
+    definitions: {
         searchRequest: {
             type: "object",
             properties: {
@@ -82,15 +82,11 @@ module.exports = {
                             type: "integer",
                             minimum: 0
                         },
-                        parentId: {
-                            type: "integer",
-                            minimum: 0
-                        },
-                        nodeData: {
+                        node: {
                             type: "object",
                         }
                     },
-                    required: ['type', 'posX', 'posY', 'nodeData']
+                    required: ['posX', 'posY', 'node']
                 }
             },
             required: ['type', "node"]
@@ -123,12 +119,12 @@ module.exports = {
                 posX: {
                     type: 'integer',
                     minimum: 0
-                }
+                },
                 posY: {
                     type: 'integer',
                     minimum: 0
                 }
-            }
+            },
             required: ['type', 'id', 'posX', 'posY']
         },
         newNodeData: {
@@ -181,7 +177,7 @@ module.exports = {
             },
             required: ['type', 'linkid']
         }
-    ],
+    },
 
     response: {
         type: "object",
@@ -200,7 +196,7 @@ module.exports = {
 
 
     },
-    rdefinitions: [
+    rdefinitions: {
         searchResponse: {
             type: "object",
             properties: {
@@ -224,20 +220,20 @@ module.exports = {
                                 type: "integer",
                                 minimum: 0
                             },
-                            nodeData: {
+                            node: {
                                 type: "object"
                             }
 
 
                         },
-                        required: ["id", "posX", "posY", "nodeData"]
+                        required: ["id", "posX", "posY", "node"]
                     }
                 }
 
             },
             required: ["type", "nodeArray"]
         }
-    ]
+    }
 
 
     //There are no responses for the rest of te requests. If data have been saved one would simply check that they have by looking the graph.
@@ -265,13 +261,13 @@ module.exports = {
                         type: "integer",
                         minimum: 0
                     },
-                    nodeData: {
+                    node: {
                         type: "object"
                     }
 
 
                 },
-                required: ["id", "posX", "posY", "nodeData"]
+                required: ["id", "posX", "posY", "node"]
             }
         },
         deletedNodes: {

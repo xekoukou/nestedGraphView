@@ -1,6 +1,6 @@
 module.exports = {
 
-    startSocketIO: function(server, express, secret, sessionStore) {
+    startSocketIO: function(server, express,passport, secret, sessionStore) {
 
         var io = require('socket.io').listen(server);
 
@@ -8,6 +8,7 @@ module.exports = {
         var passportSocketIo = require('passport.socketio');
 
         io.set('authorization', passportSocketIo.authorize({
+            passport: passport,
             cookieParser: express.cookieParser,
             key: 'express.sid', // the name of the cookie where express/connect stores its session_id
             secret: secret, // the session_secret to parse the cookie 
@@ -25,8 +26,9 @@ module.exports = {
         }
 
         function onAuthorizeFail(data, message, error, accept) {
-            if (error)
-                throw new Error(message);
+            if (error) {
+                throw new Error(message); 
+            }
             console.log('failed connection to socket.io:', message);
 
             // We use this callback to log all of our failed connections.

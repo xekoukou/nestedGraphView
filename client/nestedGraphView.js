@@ -1,4 +1,3 @@
-var host = '127.0.0.1:8000';
 var id_connector = 'graphCanvas';
 var maxWidth = 1920;
 var maxHeight = 1080;
@@ -232,8 +231,6 @@ function View(posX, posY, zoom, id_connector, width, height) {
             var diffY = node.posY - this.posY;
             $('.' + node.id + '.nestedGraphNode').css('top', (diffY / this.zoom).toString() + 'px');
             $('.' + node.id + '.nestedGraphNode').css('left', ((diffX) / this.zoom).toString() + 'px');
-            $('.' + node.id + '.nestedGraphNodeContent').css('top', ((diffY + 20) / this.zoom).toString() + 'px');
-            $('.' + node.id + '.nestedGraphNodeContent').css('left', (diffX / this.zoom).toString() + 'px');
         }
         //draw Arrows
         this.arrowCanvas.drawArrows(ids, this.posX, this.posY, this.zoom);
@@ -247,7 +244,6 @@ function View(posX, posY, zoom, id_connector, width, height) {
 
             var node = this.data.nodes[changedIds[i]];
             $(this.rootId).append(node.nodeData.summary);
-            $(this.rootId).append(node.nodeData.content);
 
             //make things draggable
             $('.' + node.id + '.nestedGraphNode').draggable();
@@ -255,9 +251,6 @@ function View(posX, posY, zoom, id_connector, width, height) {
                 var classN = event.target.className.split(' ', 2)[1];
                 thiss.data.nodes[classN].posY = Math.floor(thiss.posY + ui.position.top * thiss.zoom);
                 thiss.data.nodes[classN].posX = Math.floor(thiss.posX + ui.position.left * thiss.zoom);
-
-                $('.' + node.id + '.nestedGraphNodeContent').css('top', (ui.position.top + 20).toString() + 'px');
-                $('.' + node.id + '.nestedGraphNodeContent').css('left', (ui.position.left).toString() + 'px');
 
                 //draw Arrows
                 var ids = new Array();
@@ -280,95 +273,73 @@ function View(posX, posY, zoom, id_connector, width, height) {
 
     };
 
+    //load the interactions
+    interactions(this);
 
-
-    //interactions
-
-    //change of point of view
-    //
-    //disable context menu so as to use right click
-    document.oncontextmenu = function() {
-        return false;
-    };
-
-    $(this.rootId).on('mousedown', function(e) {
-        if (e.which == 3) {
-            var initX = e.pageX;
-            var initY = e.pageY;
-
-            $(thiss.rootId).on('mousemove', function(e) {
-                thiss.posX = Math.floor(thiss.posX + ((e.pageX - initX) / 20) * thiss.zoom);
-                thiss.posY = Math.floor(thiss.posY + ((e.pageY - initY) / 20) * thiss.zoom);
-
-                thiss.softChangeView(thiss.cleanUnNodes(Object.keys(thiss.data.nodes)));
-
-            });
-        }
-    });
-
-    $(this.rootId).on('mouseup', function(e) {
-        if (e.which == 3) {
-
-            $(thiss.rootId).unbind('mousemove');
-            thiss.data.requestData(posX, posY, zoom);
-        }
-    });
-
-    $('.nestedGraphNode .nestedGraphNode').dbclick(function(e) {
-        //TODO change from wiki output to wiki syntax and focus on form
-
-
-        //disable keydown actions so that keys are used to insert characters
-        $(this.rootId).off('keydown');
-    });
-
-    $(this.rootId).on('keyup', function(e) {
-
-        if (event.which == esc) {
-
-            //TODO remove focus from element, turn text into wiki output
-
-            //set keydown actions
-            $(this.rootId).on('keydown', function(e) {
-
-
-                //TODO add more actions 
-                //they should only send data to server
-                // the server will have to accept the action and send back a verification
-            });
-
-        }
-
-    });
-
-    //pressing esc focuses out of an input and bounds specific events to keys
-
+    //first actions of the View function
+    this.data.requestData(this.x, this.y, this.level, this.zoom);
 
 }
+
+//interactions
+
+//change of point of view
+//
+//disable context menu so as to use right click
+document.oncontextmenu = function() {
+    return false;
+};
+
+$(this.rootId).on('mousedown', function(e) {
+    if (e.which == 3) {
+        var initX = e.pageX;
+        var initY = e.pageY;
+
+        $(thiss.rootId).on('mousemove', function(e) {
+            thiss.posX = Math.floor(thiss.posX + ((e.pageX - initX) / 20) * thiss.zoom);
+            thiss.posY = Math.floor(thiss.posY + ((e.pageY - initY) / 20) * thiss.zoom);
+
+            thiss.softChangeView(thiss.cleanUnNodes(Object.keys(thiss.data.nodes)));
+
+        });
+    }
+});
+
+$('.nestedGraphNode .nestedGraphNode').dblclick(function(e) {
+    //TODO change from wiki output to wiki syntax and focus on form
+
+
+    //disable keydown actions so that keys are used to insert characters
+    $(this.rootId).off('keydown');
+});
+
+$(this.rootId).on('keyup', function(e) {
+
+    if (event.which == esc) {
+
+        //TODO remove focus from element, turn text into wiki output
+
+        //set keydown actions
+        $(this.rootId).on('keydown', function(e) {
+
+
+            //TODO add more actions 
+            //they should only send data to server
+            // the server will have to accept the action and send back a verification
+        });
+
+    }
 
 });
 
 //pressing esc focuses out of an input and bounds specific events to keys
 
+//pressing esc focuses out of an input and bounds specific events to keys
 
 
-
-
-//zoom event
-$(this.rootId).on('mousewheel', function(e) {
-    if ((thiss.zoom + e.deltaY) > 0) {
-        thiss.zoom = thiss.zoom * (1 + 0.1 * e.deltaY);
-        thiss.softChangeView(thiss.cleanUnNodes(Object.keys(thiss.data.nodes)));
-    }
-});
-
-
-//first actions of the View function
-this.data.requestData(this.x, this.y, this.level, this.zoom);
-
-}
-
+//global context of view
+var view;
 $(window).load(function(e) {
-    var view = new View(0, 0, 1, 0, id_connector, maxWidth, maxHeight);
+    view = new View(0, 0, 1, id_connector, maxWidth, maxHeight);
 
 });

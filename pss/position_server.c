@@ -44,7 +44,8 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 				    (pos_id_t *) quadbit_iter_next(&qiter);
 			}
 
-		} else {
+		} else { 
+                       if(res_item){
 
 			json_t *node = json_object();
 			json_object_set_new(node, "x",
@@ -54,9 +55,9 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 			json_object_set_new(node, "id",
 					    json_integer(res_item->id));
 			json_array_append(node_array, node);
-		}
-		json_object_set_new(response, "node_array", node_array);
-		json_decref(node_array);
+		}}
+		json_object_set_new(response, "nodeArray", node_array);
+		json_object_set_new(response, "type", json_string("searchResponse"));
 	}
 
 	return response;
@@ -119,7 +120,7 @@ int main(int argc, char *argv[])
 
 	if (argc != 3) {
 		printf
-		    ("\nPlease provide the ip address for the server to bind and the port");
+		    ("\nPlease provide the ip address for the server to connect and the port");
 		exit(1);
 	}
 	//create the server sockets
@@ -127,9 +128,10 @@ int main(int argc, char *argv[])
 	void *router = zsocket_new(ctx, ZMQ_ROUTER);
 	int port = atoi(argv[2]);
 	int rc = zsocket_connect(router, "tcp://%s:%d", argv[1], port);
-	if (rc != port) {
+	if (rc != 0) {
 		printf("The position_server could't connect to %s:%d", argv[1],
 		       port);
+                exit(-1);
 	}
 	//init the database
 	positiondb_t *positiondb;
@@ -157,17 +159,20 @@ int main(int argc, char *argv[])
 
 	while (1) {
 		zpoller_wait(poller, -1);
-		if (!zpoller_terminated(poller)) {
+		if (zpoller_terminated(poller)) {
 			return -1;
 		}
 		if (!zpoller_expired(poller)) {
 
 			zmsg_t *msg = zmsg_recv(router);
 			zframe_t *address = zmsg_unwrap(msg);
+
+        printf("\nposition server received: %s\n",(const char *)zframe_data(zmsg_first(msg)));
+
 			json_t *request_json;
 			json_error_t error;
 			request_json = json_loads((const char *)
-						  zframe_data(zmsg_first(msg)),
+						  zframe_strdup(zmsg_first(msg)),
 						  0, &error);
 			zmsg_destroy(&msg);
 
@@ -204,8 +209,8 @@ int main(int argc, char *argv[])
 					    response);
 
 			zmsg_t *resp_msg = zmsg_new();
-			char *res_json_str =
-			    json_dumps(response_json, JSON_COMPACT);
+			char *res_json_str = json_dumps(response_json, JSON_COMPACT);
+        printf("\nposition server sent: %s\n",res_json_str);
 			zmsg_addstr(resp_msg, res_json_str);
 			free(res_json_str);
 

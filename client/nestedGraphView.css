@@ -1,4 +1,5 @@
-div.nestedGraphNode
+/* nestedGraphNode is the parent div */
+div.nestedGraphNodeSummary
 {
 position:fixed;
 width:100px;
@@ -21,11 +22,16 @@ body
 	margin:0px;
 }
 
-div#graphCanvas
-{
-}
 canvas#canvas
 {
 position:fixed;
 z-index:0;
 }
+
+div#commands{
+position:fixed;
+z-index:1000;
+background-color:#98FB98;
+visibility:hidden;
+}
+
