@@ -1,4 +1,10 @@
 /* nestedGraphNode is the parent div */
+div.nestedGraphNode{
+position:fixed;
+
+}
+
+
 div.nestedGraphNodeSummary
 {
 position:fixed;

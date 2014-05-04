@@ -180,16 +180,16 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 					json_t *newData = json_object();
 					json_t *newNodes = json_array();
 					json_array_append(newNodes,
-							  json_object_get
+							  json_object_get(json_object_get
 							  (json_object_get
 							   (req->request,
-							    "request"),
+							    "clientRequest"),"request"),
 							   "node"));
 					json_object_set_new(newData, "newNodes",
 							    newNodes);
 					json_object_set_new(newData,
 							    "deletedNodes",
-							    json_object());
+							    json_array());
 
 					json_object_set_new(web_resp, "newData",
 							    newData);
@@ -201,6 +201,7 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 					       web_res_str);
 					zmsg_addstr(res, web_res_str);
 					free(web_res_str);
+                                        zmsg_wrap(res,req->address);
 					zmsg_send(&res, sweb);
 					json_decref(web_resp);
 

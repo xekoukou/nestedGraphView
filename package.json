@@ -10,6 +10,6 @@
 		  "passport-google":"0.x",
                   "passport.socketio":"2.x",
 		  "zmq":"2.x",
-                  "json-schema":"0.2.x"
+                  "tv4":"x"
 		  }
 }

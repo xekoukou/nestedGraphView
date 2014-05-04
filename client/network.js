@@ -16,7 +16,7 @@ function Data(view) {
                 searchArray: [{
                     posX: Math.floor(x),
                     posY: Math.floor(y),
-                    crit_pos: 64 - Math.floor(Math.max(Math.log(maxWidth * zoom) / Math.LN2, Math.log(maxHeight * zoom) / Math.LN2))
+                    crit_pos: 63 - Math.floor(Math.max(Math.log(maxWidth / zoom) / Math.LN2, Math.log(maxHeight / zoom) / Math.LN2)) - 2
 
                 }]
             }
@@ -28,29 +28,34 @@ function Data(view) {
     this.postNewNode = function(x, y, node) {
 
         this.socket.emit("request", {
-                clientRequestId: thiss.clientRequestId,
-                request: {
-                    type: "newNode",
-                    node: {
-                        posX: x,
-                        posY: y,
-                        node: node
-                    }
+            clientRequestId: thiss.clientRequestId,
+            request: {
+                type: "newNode",
+                node: {
+                    posX: x,
+                    posY: y,
+                    node: node
                 }
-            }); 
+            }
+        });
         console.log("request transmitted");
         thiss.clientRequestId++;
 
     }
 
+    this.updatePosition = function(posX, posY, id) {
+
+    }
+
     this.socket.on("newData", function(data) {
+        console.log("newData:" + JSON.stringify(data));
 
         var ids = new Array();
 
         var newNodes = data.newNodes;
 
         for (i = 0; i < newNodes.length; i++) {
-            var node = newNodes.indeof(i);
+            var node = newNodes[i];
             var id = node.id;
             //remove if it exists 
             if (id in thiss.nodes) {
@@ -66,7 +71,7 @@ function Data(view) {
         var deletedNodes = data.deletedNodes;
 
         for (i = 0; i < deletedNodes.length; i++) {
-            var node = deletedNodes.indeof(i);
+            var node = deletedNodes[i];
             var id = node.id;
             //remove if it exists 
             if (id in thiss.nodes) {
@@ -79,12 +84,19 @@ function Data(view) {
     });
 
     this.socket.on("response", function(data) {
-
+        console.log("response:" + JSON.stringify(data));
 
         //TODO do something with the id
         var clientRequestId = data.clientRequestId;
 
         if (data.response.type == "searchResponse") {
+
+            // delete everything
+            Object.keys(thiss.nodes).forEach(function(id) {
+                thiss.view.removeNode(id);
+
+            });
+
 
             var nodeArray = data.response.nodeArray;
 
@@ -92,8 +104,9 @@ function Data(view) {
             var ids = new Array();
 
 
+
             for (i = 0; i < nodeArray.length; i++) {
-                var node = nodeArray.indeof(i);
+                var node = nodeArray[i];
                 var id = node.id;
                 //remove if it exists 
                 if (id in thiss.nodes) {
