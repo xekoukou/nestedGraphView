@@ -4,17 +4,16 @@ module.exports = {
     request: {
         type: "object",
         properties: {
-            clientRequestId: {
+            "clientRequestId": {
                 type: "integer"
             },
             'request': {
-                type: 'object',
-                oneof: [{
+                oneOf: [{
                     '$ref': '#/definitions/searchRequest'
                 }, {
                     '$ref': '#/definitions/newNode'
                 }, {
-                    '#ref': '#/definitions/delNode'
+                    '$ref': '#/definitions/delNode'
                 }, {
                     '$ref': '#/definitions/newPosition'
                 }, {
@@ -22,20 +21,20 @@ module.exports = {
                 }, {
                     '$ref': '#/definitions/newlink'
                 }, {
-                    '#ref': '#/definitions/dellink'
+                    '$ref': '#/definitions/dellink'
                 }],
             }
         },
         required: ['clientRequestId', 'request'],
-
+        "additionalProperties": false,
         definitions: {
             searchRequest: {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['searchRequest']
+                        enum: ['searchRequest']
                     },
-                    searchArray: {
+                    "searchArray": {
                         type: "array",
                         minItems: 1,
                         items: {
@@ -56,21 +55,23 @@ module.exports = {
 
 
                             },
-                            required: ["posX", "posY", "crit_pos"]
+                            required: ["posX", "posY", "crit_pos"],
+                            "additionalProperties": false
                         }
                     }
 
                 },
-                required: ["type", "searchArray"]
+                required: ["type", "searchArray"],
+                "additionalProperties": false
             },
 
             'newNode': {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['newNode']
+                        enum: ['newNode']
                     },
-                    node: {
+                    "node": {
                         type: "object",
                         properties: {
                             posX: {
@@ -82,27 +83,30 @@ module.exports = {
                                 minimum: 0
                             },
                             node: {
-                                type: "object",
                                 "$ref": "node.js#/node"
                             }
                         },
-                        required: ['posX', 'posY', 'node']
+                        required: ['posX', 'posY', 'node'],
+                        "additionalProperties": false
                     }
                 },
-                required: ['type', "node"]
+                required: ['type', "node"],
+                "additionalProperties": false
             },
+
             'delNode': {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['delNode']
+                        enum: ['delNode']
                     },
-                    id: {
+                    "id": {
                         type: "integer",
                         minimum: 0
                     }
                 },
-                required: ['type', 'id']
+                required: ['type', 'id'],
+                "additionalProperties": false
 
             },
 
@@ -110,7 +114,7 @@ module.exports = {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['newPosition']
+                        enum: ['newPosition']
                     },
                     id: {
                         type: "integer",
@@ -125,13 +129,14 @@ module.exports = {
                         minimum: 0
                     }
                 },
-                required: ['type', 'id', 'posX', 'posY']
+                required: ['type', 'id', 'posX', 'posY'],
+                "additionalProperties": false
             },
             newNodeData: {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['newNodeData']
+                        enum: ['newNodeData']
                     },
                     id: {
                         type: "integer",
@@ -142,13 +147,14 @@ module.exports = {
 
                     }
                 },
-                required: ['type', 'content']
+                required: ['type', 'content'],
+                "additionalProperties": false
             },
             newlink: {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['newlink']
+                        enum: ['newlink']
                     },
                     'orig': {
                         type: 'integer',
@@ -162,20 +168,22 @@ module.exports = {
                         type: "object"
                     }
                 },
-                required: ['type', 'orig', 'dest', 'linkData']
+                required: ['type', 'orig', 'dest', 'linkData'],
+                "additionalProperties": false
             },
             dellink: {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['dellink']
+                        enum: ['dellink']
                     },
                     'linkid': {
                         type: 'integer',
                         minimum: 0
                     }
                 },
-                required: ['type', 'linkid']
+                required: ['type', 'linkid'],
+                "additionalProperties": false
             }
         }
     },
@@ -187,13 +195,13 @@ module.exports = {
                 type: "integer"
             },
             'response': {
-                type: 'object',
                 oneof: [{
                     '$ref': '#/definitions/searchResponse'
                 }]
             }
         },
-        required: ['clientRequestId', 'response']
+        required: ['clientRequestId', 'response'],
+        "additionalProperties": false
 
 
         ,
@@ -202,7 +210,7 @@ module.exports = {
                 type: "object",
                 properties: {
                     'type': {
-                        'enum': ['searchResponse']
+                        enum: ['searchResponse']
                     },
                     nodeArray: {
                         type: "array",
@@ -222,18 +230,19 @@ module.exports = {
                                     minimum: 0
                                 },
                                 node: {
-                                    type: "object",
                                     "$ref": "node.js#/node"
                                 }
 
 
                             },
-                            required: ["id", "posX", "posY", "node"]
+                            required: ["id", "posX", "posY", "node"],
+                            "additionalProperties": false
                         }
                     }
 
                 },
-                required: ["type", "nodeArray"]
+                required: ["type", "nodeArray"],
+                "additionalProperties": false
             }
         }
     }
@@ -265,13 +274,13 @@ module.exports = {
                         minimum: 0
                     },
                     node: {
-                        type: "object",
                         "$ref": "node.js#/node"
                     }
 
 
                 },
-                required: ["id", "posX", "posY", "node"]
+                required: ["id", "posX", "posY", "node"],
+                "additionalProperties": false
             }
         },
         deletedNodes: {
@@ -286,10 +295,12 @@ module.exports = {
 
 
                 },
-                required: ["id"]
+                required: ["id"],
+                "additionalProperties": false
             }
 
         },
-        required: ["newNodes", "deletedNodes"]
+        required: ["newNodes", "deletedNodes"],
+        "additionalProperties": false
     }
 }

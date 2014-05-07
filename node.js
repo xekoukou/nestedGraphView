@@ -13,14 +13,14 @@ module.exports = {
                 type: "integer"
             },
             input: {
-                type: "array"
+                type: "array",
                 items: {
                     type: "object",
                     "$ref": "#/definitions/link"
                 }
             },
             output: {
-                type: "array"
+                type: "array",
                 items: {
                     type: "object",
                     "$ref": "#/definitions/link"
@@ -30,50 +30,49 @@ module.exports = {
                 type: "object",
                 properties: {
                     summary: {
-                        type: "String"
+                        type: "string"
                     },
                     content: {
-                        type: "String"
+                        type: "string"
                     }
                 },
                 required: ["summary", "content"]
             },
 
         },
-        required: ["id", "parentId", "input", "output", "nodeData"]
-    ,
+        required: ["id", "parentId", "input", "output", "nodeData"],
 
-    definitions: {
+        definitions: {
 
-        link: {
-            type: "object",
-            properties: {
-                id: {
-                    type: "integer"
-                },
-                origId: {
-                    type: "integer"
-                },
-                endId: {
-                    type: "integer"
-                },
-                linkData: {
-                    type: "object",
-                    properties: {
-                        summary: {
-                            type: "String"
-                        },
-                        content: {
-                            type: "String"
-                        }
+            link: {
+                type: "object",
+                properties: {
+                    id: {
+                        type: "integer"
                     },
-                    required: ["content", "summary"]
-                }
-            },
-            required: ["id", "origId", "endId", "linkData"]
-        }
+                    origId: {
+                        type: "integer"
+                    },
+                    endId: {
+                        type: "integer"
+                    },
+                    linkData: {
+                        type: "object",
+                        properties: {
+                            summary: {
+                                type: "String"
+                            },
+                            content: {
+                                type: "String"
+                            }
+                        },
+                        required: ["content", "summary"]
+                    }
+                },
+                required: ["id", "origId", "endId", "linkData"]
+            }
 
+        }
     }
-}
 
 }

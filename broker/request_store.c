@@ -20,8 +20,17 @@ request_store_add(req_store_t * req_store, zframe_t * address, json_t * request)
 	kh_value(req_store->rmap, k).request = request;
 	kh_value(req_store->rmap, k).response = NULL;
 
-	req_store->next_req_id++;
-	return (req_store->next_req_id - 1);
+//TODO here we expect that there cant be old requests IMPORTANT 
+// CAN INTRODUCE MEMORY LEAKS
+
+	int32_t old = req_store->next_req_id;
+	if (req_store->next_req_id == 0x7FFFFFFF) {
+		req_store->next_req_id = 2;
+	} else {
+		req_store->next_req_id++;
+	}
+	return old;
+
 }
 
 void request_store_delete(req_store_t * req_store, int32_t id)

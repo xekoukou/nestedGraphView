@@ -32,9 +32,9 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 			while (res_item) {
 
 				json_t *node = json_object();
-				json_object_set_new(node, "x",
+				json_object_set_new(node, "posX",
 						    json_integer(res_item->x));
-				json_object_set_new(node, "y",
+				json_object_set_new(node, "posY",
 						    json_integer(res_item->y));
 				json_object_set_new(node, "id",
 						    json_integer(res_item->id));
@@ -48,9 +48,9 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 			if (res_item) {
 
 				json_t *node = json_object();
-				json_object_set_new(node, "x",
+				json_object_set_new(node, "posX",
 						    json_integer(res_item->x));
-				json_object_set_new(node, "y",
+				json_object_set_new(node, "posY",
 						    json_integer(res_item->y));
 				json_object_set_new(node, "id",
 						    json_integer(res_item->id));
@@ -87,11 +87,45 @@ json_t *insert(positiondb_t * positiondb, quadbit_t * quadbit, json_t * json)
 	}
 	positiondb_insert_pos_id(positiondb, item);
 	quadbit_insert(quadbit, (quadbit_item_t *) item);
+//TODO remove this
+	printf("INSERT\n");
+	quadbit_print(quadbit);
 
 	json_t *response = json_object();
 	json_object_set_new(response, "type", json_string("newNodeResponse"));
 	json_object_set_new(response, "ack", json_string("ok"));
 	return response;
+
+}
+
+json_t *newPosition(positiondb_t * positiondb, quadbit_t * quadbit,
+		    json_t * json)
+{
+	pos_id_t *item = malloc(sizeof(pos_id_t));
+	item->x = json_integer_value(json_object_get(json, "posX"));
+	item->y = json_integer_value(json_object_get(json, "posY"));
+	item->id = json_integer_value(json_object_get(json, "id"));
+
+//delete the previous position
+	pos_id_t *prev_pos_id = positiondb_get_pos_id(positiondb, item->id);
+	pos_id_t *deleted =
+	    (pos_id_t *) quadbit_remove(quadbit,
+					(quadbit_item_t *) prev_pos_id);
+//TODO remove this
+	printf("DELETION\n");
+	quadbit_print(quadbit);
+
+	free(deleted);
+	free(prev_pos_id);
+
+//it updates the values
+	positiondb_insert_pos_id(positiondb, item);
+	quadbit_insert(quadbit, (quadbit_item_t *) item);
+//TODO remove this
+	printf("INSERT AFTER DELETION\n");
+	quadbit_print(quadbit);
+
+	return NULL;
 
 }
 
@@ -199,30 +233,40 @@ int main(int argc, char *argv[])
 						   request);
 
 				} else {
+					if (strcmp(type, "newPosition") == 0) {
+						response =
+						    newPosition(positiondb,
+								quadbit,
+								request);
 
+					} else {
 //TODO Do the remaining requests
+					}
 				}
 			}
+			if (response) {
+				json_t *response_json = json_object();
 
-			json_t *response_json = json_object();
+				json_object_set_new(response_json, "requestId",
+						    json_object_get
+						    (request_json,
+						     "requestId"));
+				json_object_set_new(response_json, "response",
+						    response);
 
-			json_object_set_new(response_json, "requestId",
-					    json_object_get
-					    (request_json, "requestId"));
-			json_object_set_new(response_json, "response",
-					    response);
+				zmsg_t *resp_msg = zmsg_new();
+				char *res_json_str =
+				    json_dumps(response_json, JSON_COMPACT);
+				printf("\nposition server sent: %s\n",
+				       res_json_str);
+				zmsg_addstr(resp_msg, res_json_str);
+				free(res_json_str);
 
-			zmsg_t *resp_msg = zmsg_new();
-			char *res_json_str =
-			    json_dumps(response_json, JSON_COMPACT);
-			printf("\nposition server sent: %s\n", res_json_str);
-			zmsg_addstr(resp_msg, res_json_str);
-			free(res_json_str);
+				zmsg_wrap(resp_msg, address);
+				zmsg_send(&resp_msg, router);
 
-			zmsg_wrap(resp_msg, address);
-			zmsg_send(&resp_msg, router);
-
-			json_decref(response_json);
+				json_decref(response_json);
+			}
 			json_decref(request_json);
 		}
 	}

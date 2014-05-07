@@ -257,20 +257,23 @@ var divNode = function(id, content) {
                 //make things draggable
                 $('.' + node.id + '.nestedGraphNode').draggable();
                 $('.' + node.id + '.nestedGraphNode').on("drag", function(event, ui) {
-                    var classN = event.target.className.split(' ', 2)[0];
-                    console.log(classN);
-                    thiss.data.nodes[classN].posY = Math.floor(thiss.posY + ui.position.top / thiss.zoom);
-                    thiss.data.nodes[classN].posX = Math.floor(thiss.posX + ui.position.left / thiss.zoom);
+                    var id = parseInt(event.target.className.split(' ', 2)[0]);
+                    thiss.data.nodes[id].posY = Math.floor(thiss.posY + ui.position.top / thiss.zoom);
+                    thiss.data.nodes[id].posX = Math.floor(thiss.posX + ui.position.left / thiss.zoom);
 
                     //draw Arrows
                     var ids = new Array();
                     ids.push(node.id);
                     thiss.arrowCanvas.drawArrows(ids, thiss.posX, thiss.posY, thiss.zoom);
-                    //TODO create a newPosition json request
-                    thiss.data.updatePosition(node.id);
+
+                });
+                $('.' + node.id + '.nestedGraphNode').on("dragstop", function(event, ui) {
+                    var id = parseInt(event.target.className.split(' ', 2)[0]);
+                    thiss.data.updatePosition(thiss.data.nodes[id].posX, thiss.data.nodes[id].posY, id);
 
                 });
             }
+
             this.softChangeView(changedIds);
 
         };

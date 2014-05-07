@@ -38,13 +38,25 @@ function Data(view) {
                 }
             }
         });
-        console.log("request transmitted");
+        console.log("newNode request transmitted");
         thiss.clientRequestId++;
 
     }
 
     this.updatePosition = function(posX, posY, id) {
 
+        this.socket.emit("request", {
+            clientRequestId: thiss.clientRequestId,
+            request: {
+                type: "newPosition",
+                posX: posX,
+                posY: posY,
+                id: id
+
+            }
+        });
+        console.log("newPosition request transmitted");
+        thiss.clientRequestId++;
     }
 
     this.socket.on("newData", function(data) {

@@ -66,13 +66,34 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 			json_decref(graph_request);
 
 		} else {
-			//TODO process request
-			//malformed request
-			printf("\ni received a malformed request : %s", type);
-			//delete request 
-			zframe_destroy(&address);
-			request_store_delete(req_store, requestId);
+			if (strcmp(type, "newPosition") == 0) {
 
+				json_t *pss_request = json_object();
+				json_object_set_new(pss_request, "requestId",
+						    json_integer(requestId));
+				json_object_set(pss_request, "request",
+						request);
+
+				zmsg_t *req = zmsg_new();
+				char *pss_req_str =
+				    json_dumps(pss_request, JSON_COMPACT);
+				printf("\nbroker:spss sent: %s\n", pss_req_str);
+				zmsg_addstr(req, pss_req_str);
+				free(pss_req_str);
+				zmsg_send(&req, spss);
+
+				json_decref(pss_request);
+
+			} else {
+				//TODO process request
+				//malformed request
+				printf("\ni received a malformed request : %s",
+				       type);
+				//delete request 
+				zframe_destroy(&address);
+				request_store_delete(req_store, requestId);
+
+			}
 		}
 	}
 
@@ -180,10 +201,12 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 					json_t *newData = json_object();
 					json_t *newNodes = json_array();
 					json_array_append(newNodes,
-							  json_object_get(json_object_get
+							  json_object_get
 							  (json_object_get
-							   (req->request,
-							    "clientRequest"),"request"),
+							   (json_object_get
+							    (req->request,
+							     "clientRequest"),
+							    "request"),
 							   "node"));
 					json_object_set_new(newData, "newNodes",
 							    newNodes);
@@ -201,7 +224,7 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 					       web_res_str);
 					zmsg_addstr(res, web_res_str);
 					free(web_res_str);
-                                        zmsg_wrap(res,req->address);
+					zmsg_wrap(res, req->address);
 					zmsg_send(&res, sweb);
 					json_decref(web_resp);
 
@@ -340,6 +363,13 @@ graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 						    (json_object_get
 						     (request, "clientRequest"),
 						     "request"), "node");
+//set the id of the node
+				json_object_set(json_object_get(node, "node"),
+						"id", json_object_get(response,
+								      "id"));
+				json_object_set(node, "id",
+						json_object_get(response,
+								"id"));
 				json_t *pnode = json_object();
 				json_object_set(pnode, "posX",
 						json_object_get(node, "posX"));

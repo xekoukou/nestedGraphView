@@ -87,6 +87,32 @@ void positiondb_delete_pos_id(positiondb_t * positiondb, int64_t id)
 	}
 }
 
+pos_id_t *positiondb_get_pos_id(positiondb_t * positiondb, int64_t id)
+{
+
+	char *errptr = NULL;
+	size_t vallen;
+	char *value;
+
+	value = leveldb_get(positiondb->db,
+			    positiondb->readoptions,
+			    (const char *)&id,
+			    sizeof(int64_t), &vallen, &errptr);
+
+	if (errptr) {
+		printf("\n%s", errptr);
+		exit(1);
+	}
+
+	pos_id_t *pos_id = malloc(sizeof(pos_id_t));
+	memcpy(pos_id, value, vallen);
+	pos_id->id = id;
+	free(value);
+
+	return pos_id;
+
+}
+
 //create an iterator and when the iter is invalid ,you finish destroy it
 //TODO I need to probably catch the errors
 pos_id_t *positiondb_first(leveldb_iterator_t * iter)

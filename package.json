@@ -1,15 +1,15 @@
 {
-  "name": "nGraphVServer",
-  "description": "nested Graph View Server",
-  "version": "0.0.1",
-  "private": true,
-  "dependencies": {
-                  "express": "3.x",
-		  "socket.io":"0.x",
-		  "passport":"0.x",
-		  "passport-google":"0.x",
-                  "passport.socketio":"2.x",
-		  "zmq":"2.x",
-                  "tv4":"x"
-		  }
+    "name": "nGraphVServer",
+    "description": "nested Graph View Server",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "express": "3.x",
+        "socket.io": "0.x",
+        "passport": "0.x",
+        "passport-google": "0.x",
+        "passport.socketio": "2.x",
+        "zmq": "2.x",
+        "tv4": "x"
+    }
 }

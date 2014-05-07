@@ -49,6 +49,9 @@ void positiondb_insert_pos_id(positiondb_t * positiondb, pos_id_t * pos_id);
 
 void positiondb_delete_pos_id(positiondb_t * positiondb, int64_t id);
 
+//the receiver needs to free the output
+pos_id_t *positiondb_get_pos_id(positiondb_t * positiondb, int64_t id);
+
 //create an iterator and when the iter is invalid ,you finish destroy it
 //TODO I need to probably catch the errors
 pos_id_t *positiondb_first(leveldb_iterator_t * iter);
