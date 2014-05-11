@@ -5,6 +5,7 @@
         var escKey = 27;
         var iKey = 73;
         var cKey = 67;
+        var lKey = 76;
         var mouseX;
         var mouseY;
 
@@ -15,26 +16,30 @@
 
         //tracking the mouse 
         var mouseTracking = function(e) {
-            mouseX = e.pageX;
-            mouseY = e.pageY;
+            if (actOnEvent) {
+                mouseX = e.pageX;
+                mouseY = e.pageY;
+                actOnEvent = false;
+            }
         };
 
         var moveSpace = function(e) {
+            if (actOnEvent) {
+                mouseX = e.pageX;
+                mouseY = e.pageY;
+                var nposX = Math.floor(view.posX + ((-e.pageX + initX) / 20) / view.zoom);
+                var nposY = Math.floor(view.posY + ((-e.pageY + initY) / 20) / view.zoom);
+                if (nposX >= 0) {
+                    view.posX = nposX;
+                }
+                if (nposY >= 0) {
+                    view.posY = nposY;
+                }
 
-            mouseX = e.pageX;
-            mouseY = e.pageY;
-            var nposX = Math.floor(view.posX + ((-e.pageX + initX) / 20) / view.zoom);
-            var nposY = Math.floor(view.posY + ((-e.pageY + initY) / 20) / view.zoom);
-            if (nposX >= 0) {
-                view.posX = nposX;
+                var changedIds = Object.keys(view.data.nodes);
+                view.softChangeView(view.cleanUnNodes(changedIds));
+                actOnEvent = false;
             }
-            if (nposY >= 0) {
-                view.posY = nposY;
-            }
-
-            var changedIds = Object.keys(view.data.nodes);
-            view.softChangeView(view.cleanUnNodes(changedIds));
-
         };
 
         $(window).on('mousemove', mouseTracking);
@@ -99,7 +104,21 @@
         };
 
         var commandsUp = function(view) {
+            var nkeys = {
+                lkey: 0
+            };
+            var ids = new Array();
+
+            var cleanAllBut = function(key) {
+                Object.keys(nkeys).forEach(function(nkey) {
+                    if (key != nkey) {
+                        nkeys[nkey] = 0;
+                    }
+                })
+            }
+
             $(window).on('keydown', function(event) {
+
 
                 if (event.which == iKey) {
 
@@ -111,6 +130,7 @@
                     $('div#commands').css('visibility', function(i, visibility) {
                         return (visibility == 'visible') ? 'hidden' : 'visible';
                     });
+                    cleanAllBut("");
                 };
 
 
@@ -127,9 +147,35 @@
                     node.nodeData.summary = 'summary';
                     node.nodeData.content = 'content';
                     view.data.postNewNode(posX, posY, node);
+                    cleanAllBut("");
                 };
 
+                if (event.which == lKey) {
 
+                    if (nkeys["lkey"] == 0) {
+                        $(".nestedGraphNode").on("mouseenter",
+
+                            function(e) {
+                                ids[nkeys["lkey"] - 1] = parseInt(e.target.className.split(' ', 2)[0]);
+                                console.log("id[" + nkeys["lkey"] + '] : ' + ids[nkeys["lkey"] - 1]);
+                            }
+                        );
+                        nkeys["lkey"]++;
+                    } else {
+
+                        if (nkeys["lkey"] == 1) {
+                            nkeys["lkey"]++;
+                        } else {
+                            if (nkeys["lkey"] == 2) {
+                                console.log("ids:" + ids[0] + ' , ' + ids[1]);
+                                view.data.newLink(ids[0], ids[1], {});
+                                $(".nestedGraphNode").off("mouseenter");
+                                nkeys["lkey"] = 0;
+                            }
+                        }
+                    }
+                    cleanAllBut("lkey");
+                }
                 //TODO add more actions 
                 //they should only send data to server
                 // the server will have to accept the action and send back a verification

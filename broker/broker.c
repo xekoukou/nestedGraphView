@@ -1,7 +1,7 @@
-#include<czmq.h>
-#include<stdio.h>
-#include<jansson.h>
-#include"request_store.h"
+#include <czmq.h>
+#include <stdio.h>
+#include <jansson.h>
+#include "request_store.h"
 
 void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 {
@@ -47,7 +47,7 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 					    json_integer(requestId));
 			json_t *newNodeRequest = json_object();
 			json_object_set_new(newNodeRequest, "type",
-					    json_string("newNodeRequest"));
+					    json_string("newNode"));
 			json_object_set(newNodeRequest, "node",
 					json_object_get(json_object_get
 							(request, "node"),
@@ -85,14 +85,40 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 				json_decref(pss_request);
 
 			} else {
-				//TODO process request
-				//malformed request
-				printf("\ni received a malformed request : %s",
-				       type);
-				//delete request 
-				zframe_destroy(&address);
-				request_store_delete(req_store, requestId);
 
+				if (strcmp(type, "newLink") == 0) {
+
+					json_t *graph_request = json_object();
+					json_object_set_new(graph_request,
+							    "requestId",
+							    json_integer
+							    (requestId));
+					json_object_set(graph_request,
+							"request", request);
+
+					zmsg_t *req = zmsg_new();
+					char *graph_req_str =
+					    json_dumps(graph_request,
+						       JSON_COMPACT);
+					printf("\nbroker:sgraph sent: %s\n",
+					       graph_req_str);
+					zmsg_addstr(req, graph_req_str);
+					free(graph_req_str);
+					zmsg_send(&req, sgraph);
+
+					json_decref(graph_request);
+
+				} else {
+					//TODO process request
+					//malformed request
+					printf
+					    ("\ni received a malformed request : %s",
+					     type);
+					//delete request 
+					zframe_destroy(&address);
+					request_store_delete(req_store,
+							     requestId);
+				}
 			}
 		}
 	}
@@ -133,7 +159,7 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 
 		if (strcmp(req_type, "searchRequest") == 0) {
 
-//store the locations and request the content
+			//store the locations and request the content
 
 			req->response = response;
 
@@ -188,7 +214,7 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 					json_object_set_new(web_resp, "type",
 							    json_string
 							    ("newData"));
-//TODO at the moment only the original node gets the update, which is good enough for me
+					//TODO at the moment only the original node gets the update, which is good enough for me
 					json_t *sessionIds = json_array();
 					json_array_append(sessionIds,
 							  json_object_get
@@ -210,9 +236,6 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 							   "node"));
 					json_object_set_new(newData, "newNodes",
 							    newNodes);
-					json_object_set_new(newData,
-							    "deletedNodes",
-							    json_array());
 
 					json_object_set_new(web_resp, "newData",
 							    newData);
@@ -231,7 +254,7 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 				} else {
 
 					if (strcmp(ack, "fail") == 0) {
-//TODO ask the graph to delete the node
+						//TODO ask the graph to delete the node
 					}
 
 				}
@@ -284,7 +307,7 @@ graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 
 			assert(json_array_size(nodeArray) ==
 			       json_array_size(nodeDataArray));
-//add the content data to the location data
+			//add the content data to the location data
 			int i;
 			for (i = 0; i < json_array_size(nodeArray); i++) {
 
@@ -312,7 +335,7 @@ graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 
 				}
 
-//TODO Put an assert here so that we are sure that all nodes have content
+				//TODO Put an assert here so that we are sure that all nodes have content
 
 			}
 
@@ -324,9 +347,8 @@ graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 					json_string("response"));
 			json_t *clientResponse = json_object();
 			json_object_set(clientResponse, "clientRequestId",
-					json_object_get(json_object_get
-							(request,
-							 "clientRequest"),
+					json_object_get(json_object_get(request,
+									"clientRequest"),
 							"clientRequestId"));
 			json_t *cl_response = json_object();
 			json_object_set_new(cl_response, "type",
@@ -363,7 +385,7 @@ graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 						    (json_object_get
 						     (request, "clientRequest"),
 						     "request"), "node");
-//set the id of the node
+				//set the id of the node
 				json_object_set(json_object_get(node, "node"),
 						"id", json_object_get(response,
 								      "id"));
@@ -398,7 +420,61 @@ graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 
 			}
 		} else {
+			if (strcmp(resp_type, "newLinkResponse") == 0) {
+				if (strcmp(req_type, "newLink") == 0) {
 
+					json_t *link =
+					    json_object_get(json_object_get
+							    (json_object_get
+							     (request,
+							      "clientRequest"),
+							     "request"),
+							    "link");
+					//set the id of the link
+					json_object_set(link,
+							"id",
+							json_object_get
+							(response, "id"));
+
+					json_t *web_resp = json_object();
+					json_object_set_new(web_resp, "type",
+							    json_string
+							    ("newData"));
+					//TODO at the moment only the original node gets the update, which is good enough for me
+					json_t *sessionIds = json_array();
+					json_array_append(sessionIds,
+							  json_object_get
+							  (req->request,
+							   "sessionId"));
+					json_object_set_new(web_resp,
+							    "sessionIds",
+							    sessionIds);
+
+					json_t *newData = json_object();
+					json_t *newLinks = json_array();
+					json_array_append(newLinks, link);
+					json_object_set_new(newData, "newLinks",
+							    newLinks);
+
+					json_object_set_new(web_resp, "newData",
+							    newData);
+
+					zmsg_t *res = zmsg_new();
+					char *web_res_str =
+					    json_dumps(web_resp, JSON_COMPACT);
+					printf("\nbroker:sweb sent: %s\n",
+					       web_res_str);
+					zmsg_addstr(res, web_res_str);
+					free(web_res_str);
+					zmsg_wrap(res, req->address);
+					zmsg_send(&res, sweb);
+					json_decref(web_resp);
+					json_decref(graph_resp_json);
+
+				}
+			} else {
+
+			}
 		}
 	}
 
@@ -453,17 +529,18 @@ int main(int argc, char *argv[])
 	} else {
 		printf("\nThe broker:spss did bind to %s:%d", argv[1], port);
 	}
-//initialize request store
+	//initialize request store
 	req_store_t *req_store;
 	request_store_init(&req_store);
 
 	zmq_pollitem_t poll_items[] = {
 
-		{sweb, 0, ZMQ_POLLIN, 0}
-		,
-		{sgraph, 0, ZMQ_POLLIN, 0}
-		,
-		{spss, 0, ZMQ_POLLIN, 0}
+		{
+		 sweb, 0, ZMQ_POLLIN, 0}
+		, {
+		   sgraph, 0, ZMQ_POLLIN, 0}
+		, {
+		   spss, 0, ZMQ_POLLIN, 0}
 
 	};
 	while (1) {

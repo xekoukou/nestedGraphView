@@ -59,39 +59,101 @@ function Data(view) {
         thiss.clientRequestId++;
     }
 
+    this.newLink = function(origId, endId, linkData) {
+
+        this.socket.emit("request", {
+            clientRequestId: thiss.clientRequestId,
+            request: {
+                type: "newLink",
+                link: {
+                    origId: origId,
+                    endId: endId,
+                    linkData: linkData
+                }
+            }
+
+        });
+        console.log("newLink request transmitted");
+
+    }
+
     this.socket.on("newData", function(data) {
         console.log("newData:" + JSON.stringify(data));
 
         var ids = new Array();
+        var index = 0;
 
-        var newNodes = data.newNodes;
 
-        for (i = 0; i < newNodes.length; i++) {
-            var node = newNodes[i];
-            var id = node.id;
-            //remove if it exists 
-            if (id in thiss.nodes) {
-                thiss.view.removeNode(id);
+        if (typeof data.newNodes != 'undefined') {
+            var newNodes = data.newNodes;
+
+            for (i = 0; i < newNodes.length; i++) {
+                var node = newNodes[i];
+                var id = node.id;
+                //remove if it exists 
+                if (id in thiss.nodes) {
+                    thiss.view.removeNode(id);
+                }
+                //add arrows property
+                node.arrows = new Object();
+                if (typeof node.node.input == 'undefined' || node.node.input == null) {
+                    node.node.input = new Array();
+                }
+                if (typeof node.node.output == 'undefined' || node.node.output == null) {
+                    node.node.output = new Array();
+                }
+                thiss.nodes[id] = node;
+                ids[index] = id;
+                index++;
+
             }
-            //add arrows property
-            node.arrows = new Object();
-            thiss.nodes[id] = node;
-            ids[i] = id;
-
         }
 
-        var deletedNodes = data.deletedNodes;
+        if (typeof data.deletedNodes != 'undefined') {
+            var deletedNodes = data.deletedNodes;
 
-        for (i = 0; i < deletedNodes.length; i++) {
-            var node = deletedNodes[i];
-            var id = node.id;
-            //remove if it exists 
-            if (id in thiss.nodes) {
-                thiss.view.removeNode(id);
+            for (i = 0; i < deletedNodes.length; i++) {
+                var node = deletedNodes[i];
+                var id = node.id;
+                //remove if it exists 
+                if (id in thiss.nodes) {
+                    thiss.view.removeNode(id);
+                }
+
             }
+        }
+
+        if (typeof data.newLinks != 'undefined') {
+            //TODO grab the two nodes and transfer the data
+            var newLinks = data.newLinks;
+
+            for (i = 0; i < newLinks.length; i++) {
+                var link = newLinks[i];
+                var origId = link.origId;;
+                var endId = link.endId;;
+                //remove if it exists 
+                if (endId in thiss.nodes) {
+                    var node = thiss.nodes[endId];
+                    node.node.input.push(link);
+                    thiss.view.removeNode(endId);
+                    thiss.nodes[endId] = node;
+                    ids[index] = endId;
+                    index++;
+                }
+                if (origId in thiss.nodes) {
+                    var node = thiss.nodes[origId];
+                    node.node.output.push(link);
+                    thiss.view.removeNode(origId);
+                    thiss.nodes[origId] = node;
+                    ids[index] = origId;
+                    index++;
+                }
+            }
+
 
         }
         view.hardChangeView(view.cleanUnNodes(ids));
+
 
     });
 
@@ -126,6 +188,12 @@ function Data(view) {
                 }
                 //add arrows property
                 node.arrows = new Object();
+                if (typeof node.node.input == 'undefined' || node.node.input == null) {
+                    node.node.input = new Array();
+                }
+                if (typeof node.node.output == 'undefined' || node.node.output == null) {
+                    node.node.output = new Array();
+                }
                 thiss.nodes[id] = node;
                 ids[i] = id;
 

@@ -1,6 +1,6 @@
 #include "request_store.h"
 
-void request_store_init(req_store_t ** req_store)
+void request_store_init(req_store_t * *req_store)
 {
 
 	*req_store = malloc(sizeof(req_store_t));
@@ -20,8 +20,8 @@ request_store_add(req_store_t * req_store, zframe_t * address, json_t * request)
 	kh_value(req_store->rmap, k).request = request;
 	kh_value(req_store->rmap, k).response = NULL;
 
-//TODO here we expect that there cant be old requests IMPORTANT 
-// CAN INTRODUCE MEMORY LEAKS
+	//TODO here we expect that there cant be old requests IMPORTANT 
+	// CAN INTRODUCE MEMORY LEAKS
 
 	int32_t old = req_store->next_req_id;
 	if (req_store->next_req_id == 0x7FFFFFFF) {

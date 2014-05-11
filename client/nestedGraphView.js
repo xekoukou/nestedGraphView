@@ -2,6 +2,11 @@ var id_connector = 'graphCanvas';
 var maxWidth = 1920;
 var maxHeight = 1080;
 
+var actOnEvent = true;
+var timer = window.setInterval(function() {
+    actOnEvent = true;
+}, 20);
+
 var divNode = function(id, content) {
 
     return "<div class='" + id + " nestedGraphNode'>" + content + "</div>";
@@ -100,14 +105,14 @@ var divNode = function(id, content) {
         //internal functions
         // they require redraw to work
 
-        this.drawArrow = function(arrow) {
-            canvas.addChild(arrow[0]);
-            canvas.addChild(arrow[1]);
-            canvas.addChild(arrow[2]);
+        this.iDrawArrow = function(arrow) {
+            canvas.addChild(arrow[0], false);
+            canvas.addChild(arrow[1], false);
+            canvas.addChild(arrow[2], false);
 
         };
 
-        this.removeArrow = function(arrow) {
+        this.iRemoveArrow = function(arrow) {
             arrow[0].remove();
             arrow[1].remove();
             arrow[2].remove();
@@ -116,10 +121,10 @@ var divNode = function(id, content) {
 
         this.drawArrows = function(changedIds, posX, posY, zoom) {
             for (var i = 0; i < changedIds.length; i++) {
-                var origin = nodes[changedIds[i]].node;
+                var origin = nodes[changedIds[i]];
                 var j;
-                for (j = 0; j < origin.output.length; j++) {
-                    var link = origin[j];
+                for (j = 0; j < origin.node.output.length; j++) {
+                    var link = origin.node.output[j];
                     var n = link.endId;
                     if (n in nodes) {
                         //  redraw or draw ?
@@ -127,59 +132,83 @@ var divNode = function(id, content) {
                             origin.arrows[n] = thiss.changeArrow(origin.arrows[n], (origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
                         } else {
                             origin.arrows[n] = thiss.createArrow((origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
-                            thiss.drawArrow(origin.arrows[n]);
+                            thiss.iDrawArrow(origin.arrows[n]);
                         }
 
                     }
 
                 };
-                for (j = 0; j < origin.input.length; j++) {
-                    var link = origin[i];
-                    var n = link.origId;
-                    if (n in nodes) {
-                        //  redraw or draw ?
-                        if (origin.id in nodes[n].arrows) {
-                            nodes[n].arrows[origin.id] = thiss.changeArrow(nodes[n].arrows[origin.id], (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom, (origin.posX - posX) * zoom, (origin.posY - posY) * zoom);
-
-                        } else {
-                            nodes[n].arrows[origin.id] = thiss.createArrow((nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom, (origin.posX - posX) * zoom, (origin.posY - posY) * zoom);
-                            thiss.drawArrow(nodes[n].arrows[origin.id]);
-                        }
-
-                    }
-
-                };
-
-
             }
+            thiss.redraw();
+        };
+
+        this.drawArrow = function(changedId, posX, posY, zoom) {
+            var origin = nodes[changedId];
+            var j;
+            for (j = 0; j < origin.node.output.length; j++) {
+                var link = origin.node.output[j];
+                var n = link.endId;
+                if (n in nodes) {
+                    //  redraw or draw ?
+                    if (n in origin.arrows) {
+                        origin.arrows[n] = thiss.changeArrow(origin.arrows[n], (origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
+                    } else {
+                        origin.arrows[n] = thiss.createArrow((origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
+                        thiss.iDrawArrow(origin.arrows[n]);
+                    }
+
+                }
+
+            };
+            for (j = 0; j < origin.node.input.length; j++) {
+                var link = origin.node.input[j];
+                var n = link.origId;
+                if (n in nodes) {
+                    //  redraw or draw ?
+                    if (origin.id in nodes[n].arrows) {
+                        nodes[n].arrows[origin.id] = thiss.changeArrow(nodes[n].arrows[origin.id], (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom, (origin.posX - posX) * zoom, (origin.posY - posY) * zoom);
+
+                    } else {
+                        nodes[n].arrows[origin.id] = thiss.createArrow((nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom, (origin.posX - posX) * zoom, (origin.posY - posY) * zoom);
+                        thiss.iDrawArrow(nodes[n].arrows[origin.id]);
+                    }
+
+                }
+
+            };
+
+
             thiss.redraw();
         };
 
 
         this.removeArrows = function(id) {
 
-            var origin = nodes[id].node;
-            Object.keys(origin.output).forEach(function(n) {
+            var origin = nodes[id];
+            var i;
+            for (i = 0; i < origin.node.output.length; i++) {
+                var n = origin.node.output[i].endId;
                 if (n in nodes) {
                     if (n in origin.arrows) {
-                        thiss.removeArrow(origin.arrows[n]);
+                        thiss.iRemoveArrow(origin.arrows[n]);
                         delete origin.arrows[n];
                     }
 
                 }
 
-            });
+            }
 
-            Object.keys(origin.input).forEach(function(n) {
+            for (i = 0; i < origin.node.input.length; i++) {
+                var n = origin.node.input[i].origId;
                 if (n in nodes) {
                     if (origin.id in nodes[n].arrows) {
-                        thiss.removeArrow(nodes[n].arrows[origin.id]);
+                        thiss.iRemoveArrow(nodes[n].arrows[origin.id]);
                         delete nodes[n].arrows[origin.id];
                     }
 
                 }
 
-            });
+            }
 
 
         };
@@ -257,15 +286,16 @@ var divNode = function(id, content) {
                 //make things draggable
                 $('.' + node.id + '.nestedGraphNode').draggable();
                 $('.' + node.id + '.nestedGraphNode').on("drag", function(event, ui) {
-                    var id = parseInt(event.target.className.split(' ', 2)[0]);
-                    thiss.data.nodes[id].posY = Math.floor(thiss.posY + ui.position.top / thiss.zoom);
-                    thiss.data.nodes[id].posX = Math.floor(thiss.posX + ui.position.left / thiss.zoom);
 
-                    //draw Arrows
-                    var ids = new Array();
-                    ids.push(node.id);
-                    thiss.arrowCanvas.drawArrows(ids, thiss.posX, thiss.posY, thiss.zoom);
+                    if (actOnEvent) {
+                        var id = parseInt(event.target.className.split(' ', 2)[0]);
+                        thiss.data.nodes[id].posY = Math.floor(thiss.posY + ui.position.top / thiss.zoom);
+                        thiss.data.nodes[id].posX = Math.floor(thiss.posX + ui.position.left / thiss.zoom);
 
+                        //draw Arrows
+                        thiss.arrowCanvas.drawArrow(id, thiss.posX, thiss.posY, thiss.zoom);
+                        actOnEvent = false;
+                    }
                 });
                 $('.' + node.id + '.nestedGraphNode').on("dragstop", function(event, ui) {
                     var id = parseInt(event.target.className.split(' ', 2)[0]);

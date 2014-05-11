@@ -27,11 +27,15 @@ module.exports = {
         return app;
     },
 
-    startSessionStore: function(express, cleanInterval, users) {
+    startSessionStore: function(express) {
         //a memoryStore
         var sessionStore = new express.session.MemoryStore();
 
 
+        return sessionStore;
+
+    },
+    cleanSessionStore: function(sessionStore, express, cleanInterval, users, io) {
         //clean Session Information //TODO only usefull for a memoryStore
 
         setInterval(function(sessionStore, users) {
@@ -46,6 +50,7 @@ module.exports = {
                         if (date > users[json.passport.user].ld) {
                             delete users[json.passport.user];
                             sessionStore.destroy(keys[i], null);
+                            io.of('/nestedGraphView').socket(keys[i]).disconnect(true);
 
                         }
                     }
@@ -53,8 +58,9 @@ module.exports = {
             },
             cleanInterval, sessionStore, users);
 
-        return sessionStore;
     }
+
+
 
 
 }

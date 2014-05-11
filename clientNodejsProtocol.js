@@ -19,9 +19,9 @@ module.exports = {
                 }, {
                     '$ref': '#/definitions/newNodeData'
                 }, {
-                    '$ref': '#/definitions/newlink'
+                    '$ref': '#/definitions/newLink'
                 }, {
-                    '$ref': '#/definitions/dellink'
+                    '$ref': '#/definitions/delLink'
                 }],
             }
         },
@@ -102,7 +102,7 @@ module.exports = {
                     },
                     "id": {
                         type: "integer",
-                        minimum: 0
+                        minimum: 1
                     }
                 },
                 required: ['type', 'id'],
@@ -118,7 +118,7 @@ module.exports = {
                     },
                     id: {
                         type: "integer",
-                        minimum: 0
+                        minimum: 1
                     },
                     posX: {
                         type: 'integer',
@@ -140,7 +140,7 @@ module.exports = {
                     },
                     id: {
                         type: "integer",
-                        minimum: 0
+                        minimum: 1
                     },
                     nodeData: {
                         type: 'object',
@@ -150,39 +150,46 @@ module.exports = {
                 required: ['type', 'content'],
                 "additionalProperties": false
             },
-            newlink: {
+            newLink: {
                 type: "object",
                 properties: {
                     'type': {
-                        enum: ['newlink']
+                        enum: ['newLink']
                     },
-                    'orig': {
-                        type: 'integer',
-                        minimum: 0
-                    },
-                    'dest': {
-                        type: 'integer',
-                        minimum: 0
-                    },
-                    linkData: {
-                        type: "object"
+                    link: {
+                        type: "object",
+                        properties: {
+                            'origId': {
+                                type: 'integer',
+                                minimum: 1
+                            },
+                            'endId': {
+                                type: 'integer',
+                                minimum: 1
+                            },
+                            linkData: {
+                                type: "object"
+                            },
+                        },
+                        required: ["origId", "endId", "linkData"],
+                        "additionalProperties": false
                     }
                 },
-                required: ['type', 'orig', 'dest', 'linkData'],
+                required: ['type', 'link'],
                 "additionalProperties": false
             },
-            dellink: {
+            delLink: {
                 type: "object",
                 properties: {
                     'type': {
-                        enum: ['dellink']
+                        enum: ['delLink']
                     },
-                    'linkid': {
+                    'id': {
                         type: 'integer',
                         minimum: 0
                     }
                 },
-                required: ['type', 'linkid'],
+                required: ['type', 'id'],
                 "additionalProperties": false
             }
         }
@@ -255,52 +262,62 @@ module.exports = {
     //this is sent to the client when changes have been made to the location he is viewing. it is sent without a prior request
     newData: {
         type: "object",
-        //new or updated nodes
-        newNodes: {
-            type: "array",
-            minItems: 0,
-            items: {
-                type: "object",
-                properties: {
-                    id: {
-                        type: "integer"
-                    },
-                    posX: {
-                        type: "integer",
-                        minimum: 0
-                    },
-                    posY: {
-                        type: "integer",
-                        minimum: 0
-                    },
-                    node: {
-                        "$ref": "node.js#/node"
-                    }
+        properties: {
+            //new or updated nodes
+            newNodes: {
+                type: "array",
+                minItems: 0,
+                items: {
+                    type: "object",
+                    properties: {
+                        id: {
+                            type: "integer"
+                        },
+                        posX: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        posY: {
+                            type: "integer",
+                            minimum: 0
+                        },
+                        node: {
+                            "$ref": "node.js#/node"
+                        }
 
 
-                },
-                required: ["id", "posX", "posY", "node"],
-                "additionalProperties": false
+                    },
+                    required: ["id", "posX", "posY", "node"],
+                    "additionalProperties": false
+                }
+            },
+            deletedNodes: {
+                type: "array",
+                minItems: 0,
+                items: {
+                    type: "object",
+                    properties: {
+                        id: {
+                            type: "integer"
+                        }
+
+
+                    },
+                    required: ["id"],
+                    "additionalProperties": false
+                }
+
+            },
+            newLinks: {
+                type: "array",
+                minItems: 0,
+                items: {
+                    "$ref": "node.js#/node/definitions/link"
+                }
             }
-        },
-        deletedNodes: {
-            type: "array",
-            minItems: 0,
-            items: {
-                type: "object",
-                properties: {
-                    id: {
-                        type: "integer"
-                    }
 
-
-                },
-                required: ["id"],
-                "additionalProperties": false
-            }
 
         },
-        required: ["newNodes", "deletedNodes"],
         "additionalProperties": false
     }
 }

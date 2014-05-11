@@ -108,9 +108,16 @@ json_t *newPosition(positiondb_t * positiondb, quadbit_t * quadbit,
 
 //delete the previous position
 	pos_id_t *prev_pos_id = positiondb_get_pos_id(positiondb, item->id);
-	pos_id_t *deleted =
-	    (pos_id_t *) quadbit_remove(quadbit,
-					(quadbit_item_t *) prev_pos_id);
+
+//TODO remove this
+	printf("DELETED ITEM ");
+	print_item((quadbit_item_t *) prev_pos_id);
+	printf("BEFORE DELETION\n");
+	quadbit_print(quadbit);
+
+	pos_id_t *deleted = (pos_id_t *) quadbit_remove(quadbit,
+							(quadbit_item_t *)
+							prev_pos_id);
 //TODO remove this
 	printf("DELETION\n");
 	quadbit_print(quadbit);
