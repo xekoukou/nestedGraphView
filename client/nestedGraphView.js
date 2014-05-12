@@ -7,6 +7,12 @@ var timer = window.setInterval(function() {
     actOnEvent = true;
 }, 20);
 
+//used by interactions mouseenter
+var ids = new Array();
+var index = 0;
+var inside = 0;
+
+
 var divNode = function(id, content) {
 
     return "<div class='" + id + " nestedGraphNode'>" + content + "</div>";
@@ -267,8 +273,8 @@ var divNode = function(id, content) {
                 var node = this.data.nodes[id];
                 var diffX = node.posX - this.posX;
                 var diffY = node.posY - this.posY;
-                $('.' + node.id + '.nestedGraphNode').css('top', (diffY * this.zoom).toString() + 'px');
-                $('.' + node.id + '.nestedGraphNode').css('left', ((diffX) * this.zoom).toString() + 'px');
+                $('.' + node.id + '.nestedGraphNode').css('-webkit-transform', 'translate(' + (diffX * this.zoom) + 'px' + ',' + (diffY * this.zoom) + 'px' + ')');
+                $('.' + node.id + '.nestedGraphNode').css('transform', 'translate(' + (diffX * this.zoom) + 'px' + ',' + (diffY * this.zoom) + 'px' + ')');
             }
             //draw Arrows
             this.arrowCanvas.drawArrows(ids, this.posX, this.posY, this.zoom);
@@ -282,27 +288,22 @@ var divNode = function(id, content) {
 
                 var node = this.data.nodes[changedIds[i]];
                 $(this.rootId).append(divNode(node.id, node.node.nodeData.summary));
-
-                //make things draggable
-                $('.' + node.id + '.nestedGraphNode').draggable();
-                $('.' + node.id + '.nestedGraphNode').on("drag", function(event, ui) {
-
-                    if (actOnEvent) {
-                        var id = parseInt(event.target.className.split(' ', 2)[0]);
-                        thiss.data.nodes[id].posY = Math.floor(thiss.posY + ui.position.top / thiss.zoom);
-                        thiss.data.nodes[id].posX = Math.floor(thiss.posX + ui.position.left / thiss.zoom);
-
-                        //draw Arrows
-                        thiss.arrowCanvas.drawArrow(id, thiss.posX, thiss.posY, thiss.zoom);
-                        actOnEvent = false;
-                    }
-                });
-                $('.' + node.id + '.nestedGraphNode').on("dragstop", function(event, ui) {
-                    var id = parseInt(event.target.className.split(' ', 2)[0]);
-                    thiss.data.updatePosition(thiss.data.nodes[id].posX, thiss.data.nodes[id].posY, id);
-
-                });
             }
+
+            $(".nestedGraphNode").on("mouseenter",
+
+                function(e) {
+                    ids[index] = parseInt(e.target.className.split(' ', 2)[0]);
+                    inside = 1;
+                }
+            );
+            $(".nestedGraphNode").on("mouseout",
+
+                function(e) {
+                    inside = 0;
+                }
+            );
+
 
             this.softChangeView(changedIds);
 

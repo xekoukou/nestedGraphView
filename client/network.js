@@ -105,6 +105,7 @@ function Data(view) {
                 thiss.nodes[id] = node;
                 ids[index] = id;
                 index++;
+                view.hardChangeView(view.cleanUnNodes(ids));
 
             }
         }
@@ -129,9 +130,8 @@ function Data(view) {
 
             for (i = 0; i < newLinks.length; i++) {
                 var link = newLinks[i];
-                var origId = link.origId;;
-                var endId = link.endId;;
-                //remove if it exists 
+                var origId = link.origId;
+                var endId = link.endId;
                 if (endId in thiss.nodes) {
                     var node = thiss.nodes[endId];
                     node.node.input.push(link);
@@ -149,10 +149,11 @@ function Data(view) {
                     index++;
                 }
             }
-
-
+            view.hardChangeView(view.cleanUnNodes(ids));
+            for (i = 0; i < ids.length; i++) {
+                view.arrowCanvas.drawArrow(ids[i], view.posX, view.posY, view.zoom);
+            }
         }
-        view.hardChangeView(view.cleanUnNodes(ids));
 
 
     });

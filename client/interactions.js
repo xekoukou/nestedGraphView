@@ -9,26 +9,30 @@
         var mouseX;
         var mouseY;
 
+        var ms = 15; //mouse multiplier
 
-        // these var should have been local
-        var initX;
-        var initY;
 
         //tracking the mouse 
         var mouseTracking = function(e) {
             if (actOnEvent) {
                 mouseX = e.pageX;
                 mouseY = e.pageY;
+                console.log("x:" + e.pageX + " y:" + e.pageY);
                 actOnEvent = false;
             }
         };
 
+        // these var should have been local
+        var initX;
+        var initY;
+
         var moveSpace = function(e) {
             if (actOnEvent) {
+                e.preventDefault();
                 mouseX = e.pageX;
                 mouseY = e.pageY;
-                var nposX = Math.floor(view.posX + ((-e.pageX + initX) / 20) / view.zoom);
-                var nposY = Math.floor(view.posY + ((-e.pageY + initY) / 20) / view.zoom);
+                var nposX = Math.floor(view.posX + ((-e.pageX + initX) / view.zoom));
+                var nposY = Math.floor(view.posY + ((-e.pageY + initY) / view.zoom));
                 if (nposX >= 0) {
                     view.posX = nposX;
                 }
@@ -38,8 +42,34 @@
 
                 var changedIds = Object.keys(view.data.nodes);
                 view.softChangeView(view.cleanUnNodes(changedIds));
+                initX = mouseX;
+                initY = mouseY;
                 actOnEvent = false;
             }
+        };
+        var moveNode = function(e) {
+            e.preventDefault();
+            mouseX = e.pageX;
+            mouseY = e.pageY;
+            var nposX = Math.floor(view.data.nodes[ids[0]].posX + ((e.pageX - initX) / view.zoom));
+            var nposY = Math.floor(view.data.nodes[ids[0]].posY + ((e.pageY - initY) / view.zoom));
+            if (nposX >= 0) {
+                view.data.nodes[ids[0]].posX = nposX;
+            }
+            if (nposY >= 0) {
+                view.data.nodes[ids[0]].posY = nposY;
+            }
+            var node = view.data.nodes[ids[0]];
+            var diffX = node.posX - view.posX;
+            var diffY = node.posY - view.posY;
+
+            $('.' + node.id + '.nestedGraphNode').css('-webkit-transform', 'translate(' + (diffX * view.zoom) + 'px' + ',' + (diffY * view.zoom) + 'px' + ')');
+            $('.' + node.id + '.nestedGraphNode').css('transform', 'translate(' + (diffX * view.zoom) + 'px' + ',' + (diffY * view.zoom) + 'px' + ')');
+
+
+            view.arrowCanvas.drawArrow(ids[0], view.posX, view.posY, view.zoom);
+            initX = mouseX;
+            initY = mouseY;
         };
 
         $(window).on('mousemove', mouseTracking);
@@ -60,6 +90,14 @@
                 $(window).on('mousemove', moveSpace);
 
             }
+            if (e.which == 1 && inside == 1) {
+                initX = e.pageX;
+                initY = e.pageY;
+                index++;
+                $(window).off('mousemove', mouseTracking);
+                $(window).on('mousemove', moveNode);
+
+            }
         });
 
         $(window).on('mouseup', function(e) {
@@ -68,6 +106,13 @@
                 $(window).off('mousemove', moveSpace);
                 $(window).on('mousemove', mouseTracking);
                 view.data.requestData(view.posX, view.posY, view.zoom);
+            }
+            if (e.which == 1) {
+
+                $(window).off('mousemove', moveNode);
+                $(window).on('mousemove', mouseTracking);
+                index = 0;
+                view.data.updatePosition(view.data.nodes[ids[0]].posX, view.data.nodes[ids[0]].posY, ids[0]);
             }
         });
 
@@ -107,7 +152,6 @@
             var nkeys = {
                 lkey: 0
             };
-            var ids = new Array();
 
             var cleanAllBut = function(key) {
                 Object.keys(nkeys).forEach(function(nkey) {
@@ -116,6 +160,8 @@
                     }
                 })
             }
+
+
 
             $(window).on('keydown', function(event) {
 
@@ -150,28 +196,17 @@
                     cleanAllBut("");
                 };
 
-                if (event.which == lKey) {
+                if (event.which == lKey && inside == 1) {
 
                     if (nkeys["lkey"] == 0) {
-                        $(".nestedGraphNode").on("mouseenter",
-
-                            function(e) {
-                                ids[nkeys["lkey"] - 1] = parseInt(e.target.className.split(' ', 2)[0]);
-                                console.log("id[" + nkeys["lkey"] + '] : ' + ids[nkeys["lkey"] - 1]);
-                            }
-                        );
                         nkeys["lkey"]++;
+                        index++;
                     } else {
-
                         if (nkeys["lkey"] == 1) {
-                            nkeys["lkey"]++;
-                        } else {
-                            if (nkeys["lkey"] == 2) {
-                                console.log("ids:" + ids[0] + ' , ' + ids[1]);
-                                view.data.newLink(ids[0], ids[1], {});
-                                $(".nestedGraphNode").off("mouseenter");
-                                nkeys["lkey"] = 0;
-                            }
+                            console.log("ids:" + ids[0] + ' , ' + ids[1]);
+                            view.data.newLink(ids[0], ids[1], {});
+                            nkeys["lkey"] = 0;
+                            index = 0;
                         }
                     }
                     cleanAllBut("lkey");
