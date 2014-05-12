@@ -27,12 +27,110 @@ var divNode = function(id, content) {
     function ArrowCanvas(rootId, nodes) {
 
         var nodes = nodes;
-        var thiss = this;
 
-        var canvas = oCanvas.create({
-            canvas: "#canvas",
-            background: "#ccc"
-        });
+        var vis = d3.select("#graphCanvas").append("svg").attr("width", maxWidth).attr("height", maxHeight);
+
+        this.drawArrows = function(posX, posY, zoom) {
+
+            var links = new Array();
+            Object.keys(nodes).forEach(function(id) {
+                var output = nodes[id].node.output;
+                var i;
+                for (i = 0; i < output.length; i++) {
+
+                    if (nodes[output[i].endId] != null) {
+                        links.push(
+
+                            {
+                                x: (nodes[output[i].origId].posX - posX) * zoom,
+                                y: (nodes[output[i].origId].posY - posY) * zoom,
+                                toX: (nodes[output[i].endId].posX - posX) * zoom,
+                                toY: (nodes[output[i].endId].posY - posY) * zoom
+                            }
+                        );
+                    }
+                }
+            });
+
+            vis.selectAll(".line").remove();
+
+            var lines = vis.selectAll(".line").data(links);
+            lines.enter().append("line").attr("x1", function(d) {
+                return d.x;
+            }).attr("y1", function(d) {
+                return d.y;
+            })
+                .attr("x2", function(d) {
+                    return d.toX;
+                })
+                .attr("y2", function(d) {
+                    return d.toY;
+                }).attr("class", "line")
+                .style("stroke", "rgb(0, 131, 81)")
+                .style("stroke-width", "3");
+
+            var llinks = new Array();
+            var rlinks = new Array();
+            for (i = 0; i < links.length; i++) {
+                var headlen = 10;
+                var angle = Math.atan2(links[i].toY - links[i].y, links[i].toX - links[i].x);
+
+                llinks.push({
+                    x: (links[i], links[i].toX + links[i].x) / 2,
+                    y: (links[i].toY + links[i].y) / 2,
+                    toX: (links[i].toX + links[i].x) / 2 - headlen * Math.cos(angle - Math.PI / 6),
+                    toY: (links[i].toY + links[i].y) / 2 - headlen * Math.sin(angle - Math.PI / 6)
+                });
+
+                rlinks.push({
+                    x: (links[i], links[i].toX + links[i].x) / 2,
+                    y: (links[i].toY + links[i].y) / 2,
+                    toX: (links[i].toX + links[i].x) / 2 - headlen * Math.cos(angle + Math.PI / 6),
+                    toY: (links[i].toY + links[i].y) / 2 - headlen * Math.sin(angle + Math.PI / 6)
+                });
+
+
+            }
+
+            vis.selectAll(".lline").remove();
+
+            var llines = vis.selectAll(".lline").data(llinks);
+            llines.enter().append("line").attr("x1", function(d) {
+                return d.x;
+            }).attr("y1", function(d) {
+                return d.y;
+            })
+                .attr("x2", function(d) {
+                    return d.toX;
+                })
+                .attr("y2", function(d) {
+                    return d.toY;
+                }).attr("class", "lline")
+                .style("stroke", "rgb(0, 131, 81)")
+                .style("stroke-width", "3");
+
+
+
+            vis.selectAll(".rline").remove();
+
+            var rlines = vis.selectAll(".rline").data(rlinks);
+
+            rlines.enter().append("line").attr("x1", function(d) {
+                return d.x;
+            }).attr("y1", function(d) {
+                return d.y;
+            })
+                .attr("x2", function(d) {
+                    return d.toX;
+                })
+                .attr("y2", function(d) {
+                    return d.toY;
+                }).attr("class", "rline")
+                .style("stroke", "rgb(0, 131, 81)")
+                .style("stroke-width", "3");
+
+
+        }
 
         this.changeArrow = function(arrow, x, y, toX, toY) {
             //head length
@@ -65,164 +163,6 @@ var divNode = function(id, content) {
 
             return arrow;
         };
-
-
-        this.createArrow = function(x, y, toX, toY) {
-            var arrow = new Array();
-            arrow[0] = canvas.display.line({
-                start: {
-                    x: 0,
-                    y: 0
-                },
-                end: {
-                    x: 0,
-                    y: 0
-                },
-                stroke: "2px #0aa",
-                cap: "round"
-            });
-            arrow[1] = canvas.display.line({
-                start: {
-                    x: 0,
-                    y: 0
-                },
-                end: {
-                    x: 0,
-                    y: 0
-                },
-                stroke: "2px #0aa",
-                cap: "round"
-            });
-            arrow[2] = canvas.display.line({
-                start: {
-                    x: 0,
-                    y: 0
-                },
-                end: {
-                    x: 0,
-                    y: 0
-                },
-                stroke: "2px #0aa",
-                cap: "round"
-            });
-            return this.changeArrow(arrow, x, y, toX, toY);
-        };
-
-        //internal functions
-        // they require redraw to work
-
-        this.iDrawArrow = function(arrow) {
-            canvas.addChild(arrow[0], false);
-            canvas.addChild(arrow[1], false);
-            canvas.addChild(arrow[2], false);
-
-        };
-
-        this.iRemoveArrow = function(arrow) {
-            arrow[0].remove();
-            arrow[1].remove();
-            arrow[2].remove();
-
-        };
-
-        this.drawArrows = function(changedIds, posX, posY, zoom) {
-            for (var i = 0; i < changedIds.length; i++) {
-                var origin = nodes[changedIds[i]];
-                var j;
-                for (j = 0; j < origin.node.output.length; j++) {
-                    var link = origin.node.output[j];
-                    var n = link.endId;
-                    if (n in nodes) {
-                        //  redraw or draw ?
-                        if (n in origin.arrows) {
-                            origin.arrows[n] = thiss.changeArrow(origin.arrows[n], (origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
-                        } else {
-                            origin.arrows[n] = thiss.createArrow((origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
-                            thiss.iDrawArrow(origin.arrows[n]);
-                        }
-
-                    }
-
-                };
-            }
-            thiss.redraw();
-        };
-
-        this.drawArrow = function(changedId, posX, posY, zoom) {
-            var origin = nodes[changedId];
-            var j;
-            for (j = 0; j < origin.node.output.length; j++) {
-                var link = origin.node.output[j];
-                var n = link.endId;
-                if (n in nodes) {
-                    //  redraw or draw ?
-                    if (n in origin.arrows) {
-                        origin.arrows[n] = thiss.changeArrow(origin.arrows[n], (origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
-                    } else {
-                        origin.arrows[n] = thiss.createArrow((origin.posX - posX) * zoom, (origin.posY - posY) * zoom, (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom);
-                        thiss.iDrawArrow(origin.arrows[n]);
-                    }
-
-                }
-
-            };
-            for (j = 0; j < origin.node.input.length; j++) {
-                var link = origin.node.input[j];
-                var n = link.origId;
-                if (n in nodes) {
-                    //  redraw or draw ?
-                    if (origin.id in nodes[n].arrows) {
-                        nodes[n].arrows[origin.id] = thiss.changeArrow(nodes[n].arrows[origin.id], (nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom, (origin.posX - posX) * zoom, (origin.posY - posY) * zoom);
-
-                    } else {
-                        nodes[n].arrows[origin.id] = thiss.createArrow((nodes[n].posX - posX) * zoom, (nodes[n].posY - posY) * zoom, (origin.posX - posX) * zoom, (origin.posY - posY) * zoom);
-                        thiss.iDrawArrow(nodes[n].arrows[origin.id]);
-                    }
-
-                }
-
-            };
-
-
-            thiss.redraw();
-        };
-
-
-        this.removeArrows = function(id) {
-
-            var origin = nodes[id];
-            var i;
-            for (i = 0; i < origin.node.output.length; i++) {
-                var n = origin.node.output[i].endId;
-                if (n in nodes) {
-                    if (n in origin.arrows) {
-                        thiss.iRemoveArrow(origin.arrows[n]);
-                        delete origin.arrows[n];
-                    }
-
-                }
-
-            }
-
-            for (i = 0; i < origin.node.input.length; i++) {
-                var n = origin.node.input[i].origId;
-                if (n in nodes) {
-                    if (origin.id in nodes[n].arrows) {
-                        thiss.iRemoveArrow(nodes[n].arrows[origin.id]);
-                        delete nodes[n].arrows[origin.id];
-                    }
-
-                }
-
-            }
-
-
-        };
-
-        this.redraw = function() {
-            canvas.redraw();
-        }
-
 
 
     }
@@ -277,7 +217,7 @@ var divNode = function(id, content) {
                 $('.' + node.id + '.nestedGraphNode').css('transform', 'translate(' + (diffX * this.zoom) + 'px' + ',' + (diffY * this.zoom) + 'px' + ')');
             }
             //draw Arrows
-            this.arrowCanvas.drawArrows(ids, this.posX, this.posY, this.zoom);
+            this.arrowCanvas.drawArrows(this.posX, this.posY, this.zoom);
 
 
         };
@@ -310,9 +250,9 @@ var divNode = function(id, content) {
         };
 
         this.removeNode = function(id) {
-            this.arrowCanvas.removeArrows(id);
             $('.' + id + '.nestedGraphNode').remove();
             delete thiss.data.nodes[id];
+            this.arrowCanvas.drawArrows(this.posX, this.posY, this.zoom);
 
 
         };

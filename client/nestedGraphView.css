@@ -1,6 +1,7 @@
 /* nestedGraphNode is the parent div */
 div.nestedGraphNode{
 position:fixed;
+background-color:white;
 
 }
 
@@ -28,10 +29,11 @@ body
 	margin:0px;
 }
 
-canvas#canvas
+svg
 {
 position:fixed;
 z-index:0;
+background:rgb(55, 107, 140);
 }
 
 div#commands{

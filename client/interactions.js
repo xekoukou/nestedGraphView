@@ -67,7 +67,7 @@
             $('.' + node.id + '.nestedGraphNode').css('transform', 'translate(' + (diffX * view.zoom) + 'px' + ',' + (diffY * view.zoom) + 'px' + ')');
 
 
-            view.arrowCanvas.drawArrow(ids[0], view.posX, view.posY, view.zoom);
+            view.arrowCanvas.drawArrows(view.posX, view.posY, view.zoom);
             initX = mouseX;
             initY = mouseY;
         };
