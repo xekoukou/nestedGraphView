@@ -17,7 +17,6 @@
             if (actOnEvent) {
                 mouseX = e.pageX;
                 mouseY = e.pageY;
-                console.log("x:" + e.pageX + " y:" + e.pageY);
                 actOnEvent = false;
             }
         };

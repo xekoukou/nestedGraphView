@@ -132,39 +132,6 @@ var divNode = function(id, content) {
 
         }
 
-        this.changeArrow = function(arrow, x, y, toX, toY) {
-            //head length
-            var headlen = 10;
-            var angle = Math.atan2(toY - y, toX - x);
-            arrow[0].start = {
-                'x': x,
-                'y': y
-            };
-            arrow[0].end = {
-                'x': toX,
-                'y': toY
-            };
-            arrow[1].start = {
-                'x': (toX + x) / 2,
-                'y': (toY + y) / 2
-            };
-            arrow[1].end = {
-                'x': (toX + x) / 2 - headlen * Math.cos(angle - Math.PI / 6),
-                'y': (toY + y) / 2 - headlen * Math.sin(angle - Math.PI / 6)
-            };
-            arrow[2].start = {
-                x: (toX + x) / 2,
-                y: (toY + y) / 2
-            };
-            arrow[2].end = {
-                x: (toX + x) / 2 - headlen * Math.cos(angle + Math.PI / 6),
-                y: (toY + y) / 2 - headlen * Math.sin(angle + Math.PI / 6)
-            };
-
-            return arrow;
-        };
-
-
     }
 
 

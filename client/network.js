@@ -1,3 +1,24 @@
+var searchArrayf = function(posX, posY, zoom, searchArray) {
+    var power = Math.floor(Math.log(maxHeight / zoom) / Math.LN2) - 1;
+    var x = posX - (posX % Math.pow(2, power));
+    var y = posY - (posY % Math.pow(2, power));
+    var dx = Math.floor(maxWidth / zoom);
+    var dy = Math.floor(maxHeight / zoom);
+    var xorig = x;
+    do {
+        do {
+            searchArray.push({
+                posX: x,
+                posY: y,
+                crit_pos: 63 - power
+            });
+            x = x + Math.pow(2, power);
+        } while (x < posX + dx);
+        y = y + Math.pow(2, power);
+        var x = xorig;
+    } while (y < posY + dy);
+};
+
 function Data(view) {
     this.view = view;
     this.nodes = new Object();
@@ -9,16 +30,13 @@ function Data(view) {
     var thiss = this;
 
     this.requestData = function(x, y, zoom) {
+        var searchArray = new Array();
+        searchArrayf(x, y, zoom, searchArray);
         this.socket.emit("request", {
             clientRequestId: thiss.clientRequestId,
             request: {
                 type: "searchRequest",
-                searchArray: [{
-                    posX: Math.floor(x),
-                    posY: Math.floor(y),
-                    crit_pos: 63 - Math.floor(Math.max(Math.log(maxWidth / zoom) / Math.LN2, Math.log(maxHeight / zoom) / Math.LN2)) - 2
-
-                }]
+                searchArray: searchArray
             }
         });
         thiss.clientRequestId++;
@@ -94,8 +112,6 @@ function Data(view) {
                 if (id in thiss.nodes) {
                     thiss.view.removeNode(id);
                 }
-                //add arrows property
-                node.arrows = new Object();
                 if (typeof node.node.input == 'undefined' || node.node.input == null) {
                     node.node.input = new Array();
                 }
@@ -187,8 +203,6 @@ function Data(view) {
                 if (id in thiss.nodes) {
                     thiss.view.removeNode(id);
                 }
-                //add arrows property
-                node.arrows = new Object();
                 if (typeof node.node.input == 'undefined' || node.node.input == null) {
                     node.node.input = new Array();
                 }

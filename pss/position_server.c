@@ -6,6 +6,7 @@
 
 json_t *search(quadbit_t * quadbit, json_t * request)
 {
+	quadbit_print(quadbit);
 	json_t *response = json_object();
 	json_t *node_array = json_array();
 	json_t *json_searchArray = json_object_get(request, "searchArray");
@@ -57,10 +58,9 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 				json_array_append(node_array, node);
 			}
 		}
-		json_object_set_new(response, "nodeArray", node_array);
-		json_object_set_new(response, "type",
-				    json_string("searchResponse"));
 	}
+	json_object_set_new(response, "nodeArray", node_array);
+	json_object_set_new(response, "type", json_string("searchResponse"));
 
 	return response;
 
