@@ -184,13 +184,29 @@ module.exports = {
                     'type': {
                         enum: ['delLink']
                     },
-                    'id': {
-                        type: 'integer',
-                        minimum: 0
+                    link: {
+                        type: "object",
+                        properties: {
+                            'origId': {
+                                type: 'integer',
+                                minimum: 1
+                            },
+                            'endId': {
+                                type: 'integer',
+                                minimum: 1
+                            },
+                            id: {
+                                type: "integer",
+                                minimum: 1
+                            },
+                        },
+                        required: ["origId", "endId", "id"],
+                        "additionalProperties": false
                     }
                 },
-                required: ['type', 'id'],
+                required: ['type', 'link'],
                 "additionalProperties": false
+
             }
         }
     },

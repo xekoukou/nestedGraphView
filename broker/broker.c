@@ -109,15 +109,42 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 					json_decref(graph_request);
 
 				} else {
-					//TODO process request
-					//malformed request
-					printf
-					    ("\ni received a malformed request : %s",
-					     type);
-					//delete request 
-					zframe_destroy(&address);
-					request_store_delete(req_store,
-							     requestId);
+					if (strcmp(type, "delLink") == 0) {
+
+						json_t *graph_request =
+						    json_object();
+						json_object_set_new
+						    (graph_request, "requestId",
+						     json_integer(requestId));
+						json_object_set(graph_request,
+								"request",
+								request);
+
+						zmsg_t *req = zmsg_new();
+						char *graph_req_str =
+						    json_dumps(graph_request,
+							       JSON_COMPACT);
+						printf
+						    ("\nbroker:sgraph sent: %s\n",
+						     graph_req_str);
+						zmsg_addstr(req, graph_req_str);
+						free(graph_req_str);
+						zmsg_send(&req, sgraph);
+
+						json_decref(graph_request);
+
+					} else {
+
+						//TODO process request
+						//malformed request
+						printf
+						    ("\ni received a malformed request : %s",
+						     type);
+						//delete request 
+						zframe_destroy(&address);
+						request_store_delete(req_store,
+								     requestId);
+					}
 				}
 			}
 		}
@@ -474,6 +501,78 @@ graph_response(void *sgraph, req_store_t * req_store, void *sweb, void *spss)
 				}
 			} else {
 
+				if (strcmp(resp_type, "delLinkResponse") == 0) {
+					if (strcmp(req_type, "delLink") == 0) {
+
+						if (strcmp
+						    (json_string_value
+						     (json_object_get
+						      (response, "ack")),
+						     "ok") == 0) {
+
+							json_t *link =
+							    json_object_get
+							    (json_object_get
+							     (json_object_get
+							      (request,
+							       "clientRequest"),
+							      "request"),
+							     "link");
+
+							json_t *web_resp =
+							    json_object();
+							json_object_set_new
+							    (web_resp, "type",
+							     json_string
+							     ("newData"));
+							//TODO at the moment only the original node gets the update, which is good enough for me
+							json_t *sessionIds =
+							    json_array();
+							json_array_append
+							    (sessionIds,
+							     json_object_get
+							     (req->request,
+							      "sessionId"));
+							json_object_set_new
+							    (web_resp,
+							     "sessionIds",
+							     sessionIds);
+
+							json_t *newData =
+							    json_object();
+							json_t *delLinks =
+							    json_array();
+							json_array_append
+							    (delLinks, link);
+							json_object_set_new
+							    (newData,
+							     "delLinks",
+							     delLinks);
+
+							json_object_set_new
+							    (web_resp,
+							     "newData",
+							     newData);
+
+							zmsg_t *res =
+							    zmsg_new();
+							char *web_res_str =
+							    json_dumps(web_resp,
+								       JSON_COMPACT);
+							printf
+							    ("\nbroker:sweb sent: %s\n",
+							     web_res_str);
+							zmsg_addstr(res,
+								    web_res_str);
+							free(web_res_str);
+							zmsg_wrap(res,
+								  req->address);
+							zmsg_send(&res, sweb);
+							json_decref(web_resp);
+						}
+
+					}
+				}
 			}
 		}
 	}

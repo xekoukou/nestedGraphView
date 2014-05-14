@@ -95,6 +95,25 @@ function Data(view) {
 
     }
 
+
+    this.delLink = function(origId, endId, id) {
+
+        this.socket.emit("request", {
+            clientRequestId: thiss.clientRequestId,
+            request: {
+                type: "delLink",
+                link: {
+                    origId: origId,
+                    endId: endId,
+                    id: id
+                }
+            }
+        });
+
+        console.log("delLink request transmitted");
+
+    }
+
     this.socket.on("newData", function(data) {
         console.log("newData:" + JSON.stringify(data));
 
@@ -165,11 +184,53 @@ function Data(view) {
                     index++;
                 }
             }
-            view.hardChangeView(view.cleanUnNodes(ids));
-            for (i = 0; i < ids.length; i++) {
-                view.arrowCanvas.drawArrow(ids[i], view.posX, view.posY, view.zoom);
+        }
+
+        if (typeof data.delLinks != 'undefined') {
+            //TODO grab the two nodes and transfer the data
+            var delLinks = data.delLinks;
+
+            for (i = 0; i < delLinks.length; i++) {
+                var link = delLinks[i];
+                var origId = link.origId;
+                var endId = link.endId;
+                if (endId in thiss.nodes) {
+                    var node = thiss.nodes[endId];
+                    var input = node.node.input;
+                    var j;
+                    for (j = 0; j < input.length; j++) {
+                        if (input[j].id == link.id) {
+                            input.splice(j, 1);
+
+                            break;
+                        }
+                    }
+                    thiss.view.removeNode(endId);
+                    thiss.nodes[endId] = node;
+                    ids[index] = endId;
+                    index++;
+                }
+                if (origId in thiss.nodes) {
+                    var node = thiss.nodes[origId];
+                    var output = node.node.output;
+                    var j;
+                    for (j = 0; j < output.length; j++) {
+                        if (output[j].id == link.id) {
+                            output.splice(j, 1);
+
+                            break;
+                        }
+                    }
+                    thiss.view.removeNode(origId);
+                    thiss.nodes[origId] = node;
+                    ids[index] = origId;
+                    index++;
+                }
             }
         }
+
+
+        view.hardChangeView(view.cleanUnNodes(ids));
 
 
     });

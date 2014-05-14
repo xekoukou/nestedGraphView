@@ -5,6 +5,7 @@
         var escKey = 27;
         var iKey = 73;
         var cKey = 67;
+        var dKey = 68;
         var lKey = 76;
         var mouseX;
         var mouseY;
@@ -149,7 +150,8 @@
 
         var commandsUp = function(view) {
             var nkeys = {
-                lkey: 0
+                lkey: 0,
+                dkey: 0
             };
 
             var cleanAllBut = function(key) {
@@ -202,7 +204,7 @@
                         index++;
                     } else {
                         if (nkeys["lkey"] == 1) {
-                            console.log("ids:" + ids[0] + ' , ' + ids[1]);
+                            console.log("inserted link:ids:" + ids[0] + ' , ' + ids[1]);
                             view.data.newLink(ids[0], ids[1], {});
                             nkeys["lkey"] = 0;
                             index = 0;
@@ -210,6 +212,37 @@
                     }
                     cleanAllBut("lkey");
                 }
+                if (event.which == dKey && inside == 1) {
+
+                    if (nkeys["dkey"] == 0) {
+                        nkeys["dkey"]++;
+                        index++;
+                    } else {
+                        if (nkeys["dkey"] == 1) {
+                            console.log("deleted link:ids:" + ids[0] + ' , ' + ids[1]);
+                            //find the link
+                            var output = view.data.nodes[ids[0]].node.output;
+                            var i;
+                            var id = null;
+                            for (i = 0; i < output.length; i++) {
+                                if (output[i].endId == ids[1]) {
+                                    id = output[i].id;
+                                    break;
+                                }
+                            }
+                            if (id) {
+                                view.data.delLink(ids[0], ids[1], output[i].id);
+                            } else {
+                                //TODO inform the user that there is no such link
+                            }
+                            nkeys["dkey"] = 0;
+                            index = 0;
+                        }
+                    }
+                    cleanAllBut("dkey");
+                }
+
+
                 //TODO add more actions 
                 //they should only send data to server
                 // the server will have to accept the action and send back a verification
