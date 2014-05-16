@@ -465,36 +465,40 @@ void graph_response_newLinkResponse(req_t * req, json_t * request,
 				    json_t * response, int32_t requestId,
 				    void *sweb, req_store_t * req_store)
 {
+	if (strcmp("ok", json_string_value(json_object_get(response, "ack"))) ==
+	    0) {
 
-	json_t *link = json_object_get(request,
-				       "link");
-	//set the id of the link
-	json_object_set(link, "id", json_object_get(response, "id"));
+		json_t *link = json_object_get(request,
+					       "link");
+		//set the id of the link
+		json_object_set(link, "id", json_object_get(response, "id"));
 
-	json_t *web_resp = json_object();
-	json_object_set_new(web_resp, "type", json_string("newData"));
-	//TODO at the moment only the original node gets the update, which is good enough for me
-	json_t *sessionIds = json_array();
-	json_array_append(sessionIds,
-			  json_object_get(req->request, "sessionId"));
-	json_object_set_new(web_resp, "sessionIds", sessionIds);
+		json_t *web_resp = json_object();
+		json_object_set_new(web_resp, "type", json_string("newData"));
+		//TODO at the moment only the original node gets the update, which is good enough for me
+		json_t *sessionIds = json_array();
+		json_array_append(sessionIds,
+				  json_object_get(req->request, "sessionId"));
+		json_object_set_new(web_resp, "sessionIds", sessionIds);
 
-	json_t *newData = json_object();
-	json_t *newLinks = json_array();
-	json_array_append(newLinks, link);
-	json_object_set_new(newData, "newLinks", newLinks);
+		json_t *newData = json_object();
+		json_t *newLinks = json_array();
+		json_array_append(newLinks, link);
+		json_object_set_new(newData, "newLinks", newLinks);
 
-	json_object_set_new(web_resp, "newData", newData);
+		json_object_set_new(web_resp, "newData", newData);
 
-	zmsg_t *res = zmsg_new();
-	char *web_res_str = json_dumps(web_resp,
-				       JSON_COMPACT);
-	printf("\nbroker:sweb sent: %s\n", web_res_str);
-	zmsg_addstr(res, web_res_str);
-	free(web_res_str);
-	zmsg_wrap(res, req->address);
-	zmsg_send(&res, sweb);
-	json_decref(web_resp);
+		zmsg_t *res = zmsg_new();
+		char *web_res_str = json_dumps(web_resp,
+					       JSON_COMPACT);
+		printf("\nbroker:sweb sent: %s\n", web_res_str);
+		zmsg_addstr(res, web_res_str);
+		free(web_res_str);
+		zmsg_wrap(res, req->address);
+		zmsg_send(&res, sweb);
+		json_decref(web_resp);
+	}
+
 	request_store_delete(req_store, requestId);
 
 }
@@ -533,9 +537,9 @@ void graph_response_delLinkResponse(req_t * req, json_t * request,
 		zmsg_wrap(res, req->address);
 		zmsg_send(&res, sweb);
 		json_decref(web_resp);
-		request_store_delete(req_store, requestId);
 	} else {
 	}
+	request_store_delete(req_store, requestId);
 
 }
 

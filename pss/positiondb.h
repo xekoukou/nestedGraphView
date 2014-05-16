@@ -49,7 +49,8 @@ void positiondb_insert_pos_id(positiondb_t * positiondb, pos_id_t * pos_id);
 
 void positiondb_delete_pos_id(positiondb_t * positiondb, int64_t id);
 
-void positiondb_get_pos_id(positiondb_t * positiondb, int64_t id,pos_id_t *pos_id);
+void positiondb_get_pos_id(positiondb_t * positiondb, int64_t id,
+			   pos_id_t * pos_id);
 
 //create an iterator and when the iter is invalid ,you finish destroy it
 //TODO I need to probably catch the errors

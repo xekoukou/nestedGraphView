@@ -108,26 +108,29 @@ json_t *newPosition(positiondb_t * positiondb, quadbit_t * quadbit,
 
 //delete the previous position
 	pos_id_t prev_pos_id;
- positiondb_get_pos_id(positiondb, item->id,&prev_pos_id);
+	positiondb_get_pos_id(positiondb, item->id, &prev_pos_id);
 
 //TODO remove this
 	printf("DELETED ITEM ");
-	print_item((quadbit_item_t *) &prev_pos_id);
+	print_item((quadbit_item_t *) & prev_pos_id);
 	printf("BEFORE DELETION\n");
 	quadbit_print(quadbit);
 
 	pos_id_t *deleted = (pos_id_t *) quadbit_remove(quadbit,
 							(quadbit_item_t *)
-							&prev_pos_id);
+							& prev_pos_id);
 //TODO remove this
 	printf("DELETION\n");
 	quadbit_print(quadbit);
 
-	free(deleted);
+//this is in case the cliend sends an id that doesn't exist
+	if (deleted) {
+		free(deleted);
 
 //it updates the values
-	positiondb_insert_pos_id(positiondb, item);
-	quadbit_insert(quadbit, (quadbit_item_t *) item);
+		positiondb_insert_pos_id(positiondb, item);
+		quadbit_insert(quadbit, (quadbit_item_t *) item);
+	}
 //TODO remove this
 	printf("INSERT AFTER DELETION\n");
 	quadbit_print(quadbit);
@@ -140,17 +143,16 @@ json_t *delete(positiondb_t * positiondb, quadbit_t * quadbit, json_t * json)
 {
 	pos_id_t item;
 	int64_t id = json_integer_value(json_object_get(json, "id"));
-        positiondb_get_pos_id(positiondb,id,&item);
+	positiondb_get_pos_id(positiondb, id, &item);
 
 	free(quadbit_remove(quadbit, (quadbit_item_t *) & item));
 
 	positiondb_delete_pos_id(positiondb, item.id);
 
-               json_t *response = json_object();
-                json_object_set_new(response, "type",
-                                    json_string("delNode"));
-                json_object_set_new(response, "ack", json_string("ok"));
-                return response;
+	json_t *response = json_object();
+	json_object_set_new(response, "type", json_string("delNode"));
+	json_object_set_new(response, "ack", json_string("ok"));
+	return response;
 
 }
 
@@ -243,16 +245,16 @@ int main(int argc, char *argv[])
 								request);
 
 					} else {
-if(strcmp(type, "delNode") == 0){
-                                                response =
-                                                    delete(positiondb,
-                                                                quadbit,
-                                                                request);
+						if (strcmp(type, "delNode") ==
+						    0) {
+							response =
+							    delete(positiondb,
+								   quadbit,
+								   request);
 
-
-}else{
+						} else {
 //TODO Do the remaining requests
-}
+						}
 					}
 				}
 			}

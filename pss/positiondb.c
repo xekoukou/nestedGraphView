@@ -87,7 +87,8 @@ void positiondb_delete_pos_id(positiondb_t * positiondb, int64_t id)
 	}
 }
 
-void positiondb_get_pos_id(positiondb_t * positiondb, int64_t id, pos_id_t *pos_id)
+void positiondb_get_pos_id(positiondb_t * positiondb, int64_t id,
+			   pos_id_t * pos_id)
 {
 
 	char *errptr = NULL;
