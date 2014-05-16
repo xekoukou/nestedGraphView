@@ -87,7 +87,7 @@ void positiondb_delete_pos_id(positiondb_t * positiondb, int64_t id)
 	}
 }
 
-pos_id_t *positiondb_get_pos_id(positiondb_t * positiondb, int64_t id)
+void positiondb_get_pos_id(positiondb_t * positiondb, int64_t id, pos_id_t *pos_id)
 {
 
 	char *errptr = NULL;
@@ -104,12 +104,9 @@ pos_id_t *positiondb_get_pos_id(positiondb_t * positiondb, int64_t id)
 		exit(1);
 	}
 
-	pos_id_t *pos_id = malloc(sizeof(pos_id_t));
 	memcpy(pos_id, value, vallen);
 	pos_id->id = id;
 	free(value);
-
-	return pos_id;
 
 }
 

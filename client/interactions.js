@@ -6,6 +6,7 @@
         var iKey = 73;
         var cKey = 67;
         var dKey = 68;
+        var rKey = 82;
         var lKey = 76;
         var mouseX;
         var mouseY;
@@ -31,8 +32,8 @@
                 e.preventDefault();
                 mouseX = e.pageX;
                 mouseY = e.pageY;
-                var nposX = Math.floor(view.posX + ((-e.pageX + initX) / view.zoom));
-                var nposY = Math.floor(view.posY + ((-e.pageY + initY) / view.zoom));
+                var nposX = view.posX + ((-e.pageX + initX) / view.zoom);
+                var nposY = view.posY + ((-e.pageY + initY) / view.zoom);
                 if (nposX >= 0) {
                     view.posX = nposX;
                 }
@@ -51,8 +52,8 @@
             e.preventDefault();
             mouseX = e.pageX;
             mouseY = e.pageY;
-            var nposX = Math.floor(view.data.nodes[ids[0]].posX + ((e.pageX - initX) / view.zoom));
-            var nposY = Math.floor(view.data.nodes[ids[0]].posY + ((e.pageY - initY) / view.zoom));
+            var nposX = view.data.nodes[ids[0]].posX + ((e.pageX - initX) / view.zoom);
+            var nposY = view.data.nodes[ids[0]].posY + ((e.pageY - initY) / view.zoom);
             if (nposX >= 0) {
                 view.data.nodes[ids[0]].posX = nposX;
             }
@@ -112,7 +113,10 @@
                 $(window).off('mousemove', moveNode);
                 $(window).on('mousemove', mouseTracking);
                 index = 0;
-                view.data.updatePosition(view.data.nodes[ids[0]].posX, view.data.nodes[ids[0]].posY, ids[0]);
+                var node = view.data.nodes[ids[0]];
+                node.posX = Math.floor(node.posX);
+                node.posY = Math.floor(node.posY);
+                view.data.updatePosition(node.posX, node.posY, ids[0]);
             }
         });
 
@@ -150,8 +154,9 @@
 
         var commandsUp = function(view) {
             var nkeys = {
-                lkey: 0,
-                dkey: 0
+                lKey: 0,
+                rKey: 0,
+                dKey: 0
             };
 
             var cleanAllBut = function(key) {
@@ -193,32 +198,32 @@
                     node.id = -1;
                     node.nodeData.summary = 'summary';
                     node.nodeData.content = 'content';
-                    view.data.postNewNode(posX, posY, node);
+                    view.data.newNode(posX, posY, node);
                     cleanAllBut("");
                 };
 
                 if (event.which == lKey && inside == 1) {
 
-                    if (nkeys["lkey"] == 0) {
-                        nkeys["lkey"]++;
+                    if (nkeys["lKey"] == 0) {
+                        nkeys["lKey"]++;
                         index++;
                     } else {
-                        if (nkeys["lkey"] == 1) {
+                        if (nkeys["lKey"] == 1) {
                             console.log("inserted link:ids:" + ids[0] + ' , ' + ids[1]);
                             view.data.newLink(ids[0], ids[1], {});
-                            nkeys["lkey"] = 0;
+                            nkeys["lKey"] = 0;
                             index = 0;
                         }
                     }
-                    cleanAllBut("lkey");
+                    cleanAllBut("lKey");
                 }
-                if (event.which == dKey && inside == 1) {
+                if (event.which == rKey && inside == 1) {
 
-                    if (nkeys["dkey"] == 0) {
-                        nkeys["dkey"]++;
+                    if (nkeys["rKey"] == 0) {
+                        nkeys["rKey"]++;
                         index++;
                     } else {
-                        if (nkeys["dkey"] == 1) {
+                        if (nkeys["rKey"] == 1) {
                             console.log("deleted link:ids:" + ids[0] + ' , ' + ids[1]);
                             //find the link
                             var output = view.data.nodes[ids[0]].node.output;
@@ -235,12 +240,31 @@
                             } else {
                                 //TODO inform the user that there is no such link
                             }
-                            nkeys["dkey"] = 0;
+                            nkeys["rKey"] = 0;
                             index = 0;
                         }
                     }
-                    cleanAllBut("dkey");
+                    cleanAllBut("rKey");
                 }
+
+                if (event.which == dKey && inside == 1) {
+
+                    if (nkeys["dKey"] == 0) {
+                        nkeys["dKey"]++;
+                    } else {
+                        if (nkeys["dKey"] == 1) {
+                            console.log("deleted Node:id:" + ids[0]);
+                            if (ids[0]) {
+                                view.data.delNode(ids[0]);
+                            } else {
+                                //TODO no node was picked
+                            }
+                            nkeys["dKey"] = 0;
+                        }
+                    }
+                    cleanAllBut("dKey");
+                }
+
 
 
                 //TODO add more actions 

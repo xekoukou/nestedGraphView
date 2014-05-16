@@ -107,23 +107,23 @@ json_t *newPosition(positiondb_t * positiondb, quadbit_t * quadbit,
 	item->id = json_integer_value(json_object_get(json, "id"));
 
 //delete the previous position
-	pos_id_t *prev_pos_id = positiondb_get_pos_id(positiondb, item->id);
+	pos_id_t prev_pos_id;
+ positiondb_get_pos_id(positiondb, item->id,&prev_pos_id);
 
 //TODO remove this
 	printf("DELETED ITEM ");
-	print_item((quadbit_item_t *) prev_pos_id);
+	print_item((quadbit_item_t *) &prev_pos_id);
 	printf("BEFORE DELETION\n");
 	quadbit_print(quadbit);
 
 	pos_id_t *deleted = (pos_id_t *) quadbit_remove(quadbit,
 							(quadbit_item_t *)
-							prev_pos_id);
+							&prev_pos_id);
 //TODO remove this
 	printf("DELETION\n");
 	quadbit_print(quadbit);
 
 	free(deleted);
-	free(prev_pos_id);
 
 //it updates the values
 	positiondb_insert_pos_id(positiondb, item);
@@ -139,22 +139,18 @@ json_t *newPosition(positiondb_t * positiondb, quadbit_t * quadbit,
 json_t *delete(positiondb_t * positiondb, quadbit_t * quadbit, json_t * json)
 {
 	pos_id_t item;
-	item.x = json_integer_value(json_object_get(json, "x"));
-	item.y = json_integer_value(json_object_get(json, "y"));
-	item.id = json_integer_value(json_object_get(json, "id"));
+	int64_t id = json_integer_value(json_object_get(json, "id"));
+        positiondb_get_pos_id(positiondb,id,&item);
 
 	free(quadbit_remove(quadbit, (quadbit_item_t *) & item));
 
 	positiondb_delete_pos_id(positiondb, item.id);
 
-	//we need a hash because the client accepts a hash
-	json_t *json_data_id_hash = json_object();
-	char id[64];
-	sprintf(id, "%ld", item.id);
-	json_object_set_new(json_data_id_hash, id, json_null());
-	json_t *response_json = json_object();
-	json_object_set_new(response_json, "data", json_data_id_hash);
-	return response_json;
+               json_t *response = json_object();
+                json_object_set_new(response, "type",
+                                    json_string("delNode"));
+                json_object_set_new(response, "ack", json_string("ok"));
+                return response;
 
 }
 
@@ -247,7 +243,16 @@ int main(int argc, char *argv[])
 								request);
 
 					} else {
+if(strcmp(type, "delNode") == 0){
+                                                response =
+                                                    delete(positiondb,
+                                                                quadbit,
+                                                                request);
+
+
+}else{
 //TODO Do the remaining requests
+}
 					}
 				}
 			}

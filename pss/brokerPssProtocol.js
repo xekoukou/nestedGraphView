@@ -14,6 +14,8 @@ module.exports {
                         "$ref": "#/definitions/newNodeRequest"
                     }, {
                         "$ref": "../clientNodejsProtocol.js#/definitions/newPosition"
+                    }, {
+                        "$ref": "../clientNodejsProtocol.js#/definitions/delNode"
                     }
 
                 ]
@@ -67,6 +69,8 @@ module.exports {
                     "$ref": "$/definitions/searchResponse"
                 }, {
                     "$ref": "$/definitions/newNodeResponse"
+                }, {
+                    "$ref": "$/definitions/delNodeResponse"
                 }]
             }
         },
@@ -115,6 +119,18 @@ module.exports {
                 properties: {
                     type: {
                         "enum": ["newNodeResponse"]
+                    },
+                    ack: {
+                        "enum": ["ok", "fail"]
+                    }
+                },
+                required: ["ack"]
+            },
+            delNodeResponse: {
+                type: "object",
+                properties: {
+                    type: {
+                        "enum": ["delNode"]
                     },
                     ack: {
                         "enum": ["ok", "fail"]

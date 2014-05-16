@@ -330,10 +330,33 @@ module.exports = {
                 items: {
                     "$ref": "node.js#/node/definitions/link"
                 }
-            }
+            },
+            delLinks: {
+                type: "array",
+                minItems: 0,
+                items: {
+                    //TODO is this the correct syntax
+                    type: "object",
+                    properties: {
+                        'origId': {
+                            type: 'integer',
+                            minimum: 1
+                        },
+                        'endId': {
+                            type: 'integer',
+                            minimum: 1
+                        },
+                        id: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                    },
+                    required: ["origId", "endId", "id"],
+                    "additionalProperties": false
+                }
 
 
-        },
-        "additionalProperties": false
+            }},
+            "additionalProperties": false
+        }
     }
-}
