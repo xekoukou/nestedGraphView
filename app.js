@@ -5,20 +5,31 @@ if (process.argv.length != 4) {
 
 var users = new Object();
 
-var config = require("./config.js").config;
-var expressModule = require("./express.js");
-var express = require('express');
-var passport = require('passport');
-var sessionStore = expressModule.startSessionStore(express);
-var app = expressModule.startExpressApp(express, passport, config.secret, sessionStore);
-var passportJs = require("./passport.js")
-passportJs.startPassport(passport, config.address, config.port, config.sessionExpiry, users);
-passport = passportJs.appAuth(passport, app);
-var server = require("./http.js").startHTTPServer(config.address, config.port, app);
-var io = require("./socketIO.js").startSocketIO(server, express, passport, config.secret, sessionStore);
-expressModule.cleanSessionStore(sessionStore, express, config.cleanInterval, users, io);
-var dealer = require("./zmq.js").startZMQ(process.argv[2], process.argv[3]);
-//logic
-var clientNodejsProtocol = require("./clientNodejsProtocol.js");
-var nodeSchema = require("./node.js");
-require("./logic.js").startLogic(io, dealer, clientNodejsProtocol, nodeSchema);
+var config = require("./config.js");
+
+var serve = require("./serve.js");
+
+var server = require("./http.js")(config.address, config.port, serve);
+
+var io = require("./socketIO.js")(server);
+
+var dealer = require("./zmq.js")(process.argv[2], process.argv[3]);
+
+
+var logic = require("./logic.js");
+var authorization = require("./authorization.js");
+
+io.of('/graph').on('connection', function(socket) {
+    authorization(socket, users);
+    logic.io(socket, io, dealer, users);
+
+    socket.on('disconnect', function() {
+
+        delete users[socket.id];
+        console.log("one user disconnected");
+    });
+
+});
+
+
+logic.zmq(dealer, io);

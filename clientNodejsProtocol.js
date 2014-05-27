@@ -356,7 +356,8 @@ module.exports = {
                 }
 
 
-            }},
-            "additionalProperties": false
-        }
+            }
+        },
+        "additionalProperties": false
     }
+}
