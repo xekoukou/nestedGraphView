@@ -112,12 +112,30 @@ void web_request_delNode(int32_t requestId, json_t * request, void *sgraph)
 	char *req_str = json_dumps(wrequest,
 				   JSON_COMPACT);
 	printf("\nbroker:sgraph sent: %s\n", req_str);
-	printf("\nbroker:spss sent: %s\n", req_str);
 	zmsg_addstr(req, req_str);
 	free(req_str);
 	zmsg_send(&req, sgraph);
 
 	json_decref(wrequest);
+
+}
+
+void web_request_newNodeData(int32_t requestId, json_t * request, void *sgraph)
+{
+	json_t *graph_request = json_object();
+	json_object_set_new(graph_request, "requestId",
+			    json_integer(requestId));
+	json_object_set(graph_request, "request", request);
+
+	zmsg_t *req = zmsg_new();
+	char *graph_req_str = json_dumps(graph_request,
+					 JSON_COMPACT);
+	printf("\nbroker:sgraph sent: %s\n", graph_req_str);
+	zmsg_addstr(req, graph_req_str);
+	free(graph_req_str);
+	zmsg_send(&req, sgraph);
+
+	json_decref(graph_request);
 
 }
 
@@ -130,8 +148,10 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 	json_error_t error;
 	printf("\nbroker:sweb received: %s\n",
 	       (const char *)zframe_data(zmsg_first(msg)));
-	req_json =
-	    json_loads((const char *)zframe_strdup(zmsg_first(msg)), 0, &error);
+	const char *data;
+	size_t data_size = zframe_size(zmsg_first(msg));
+	data = zframe_data(zmsg_first(msg));
+	req_json = json_loadb(data, data_size, 0, &error);
 	zmsg_destroy(&msg);
 
 	int32_t requestId = request_store_add(req_store, address, req_json);
@@ -165,6 +185,9 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 
 		web_request_delNode(requestId, request, sgraph);
 
+	else if (strcmp(type, "newNodeData") == 0)
+
+		web_request_newNodeData(requestId, request, sgraph);
 	else {
 
 		//TODO process request
@@ -262,6 +285,7 @@ void pss_response_newNodeResponse(req_t * req, json_t * response,
 		}
 
 	}
+	json_decref(response);
 	request_store_delete(req_store, requestId);
 }
 
@@ -311,6 +335,7 @@ void pss_response_delNode(req_t * req, json_t * response, int32_t requestId,
 		}
 	}
 	request_store_delete(req_store, requestId);
+	json_decref(response);
 
 }
 
@@ -318,12 +343,17 @@ void pss_response(void *spss, req_store_t * req_store, void *sweb, void *sgraph)
 {
 
 	zmsg_t *msg = zmsg_recv(spss);
-	zmsg_unwrap(msg);
+	zframe_t *null = zmsg_unwrap(msg);
+	zframe_destroy(&null);
 	json_error_t error;
 	printf("\nbroker:spss received: %s\n",
 	       (const char *)zframe_data(zmsg_first(msg)));
-	json_t *pss_resp_json =
-	    json_loads((const char *)zframe_strdup(zmsg_first(msg)), 0, &error);
+	const char *data;
+	size_t data_size = zframe_size(zmsg_first(msg));
+	data = zframe_data(zmsg_first(msg));
+
+	json_t *pss_resp_json = json_loadb(data,
+					   data_size, 0, &error);
 	zmsg_destroy(&msg);
 
 	//identify the request
@@ -372,7 +402,8 @@ void graph_response_retrieveResponse(req_t * req, json_t * response,
 	json_t *nodeArray = json_object_get(req->response, "nodeArray");
 	json_t *nodeDataArray = json_object_get(response, "nodeArray");
 
-	assert(json_array_size(nodeArray) == json_array_size(nodeDataArray));
+//TODO handle this case
+/*	assert(json_array_size(nodeArray) == json_array_size(nodeDataArray));  */
 	//add the content data to the location data
 	int i;
 	for (i = 0; i < json_array_size(nodeArray); i++) {
@@ -402,7 +433,7 @@ void graph_response_retrieveResponse(req_t * req, json_t * response,
 
 	json_object_set(web_resp, "sessionId",
 			json_object_get(req->request, "sessionId"));
-	json_object_set(web_resp, "type", json_string("response"));
+	json_object_set_new(web_resp, "type", json_string("response"));
 	json_t *clientResponse = json_object();
 	json_object_set(clientResponse, "clientRequestId",
 			json_object_get(json_object_get
@@ -448,7 +479,7 @@ void graph_response_newNodeResponse(json_t * request, json_t * response,
 
 	json_t *pss_req = json_object();
 	json_object_set_new(pss_req, "requestId", json_integer(requestId));
-	json_object_set(pss_req, "request", pss_request);
+	json_object_set_new(pss_req, "request", pss_request);
 
 	zmsg_t *req = zmsg_new();
 	char *pss_req_str = json_dumps(pss_req,
@@ -575,9 +606,53 @@ void graph_response_delNodeResponse(req_t * req, json_t * request,
 		if (strcmp(ack, "fail") == 0) {
 			// This can fail because of the existence of links
 			// clean things up
-			request_store_delete(req_store, requestId);
 		}
+		request_store_delete(req_store, requestId);
 	}
+
+}
+
+void graph_response_newNodeDataResponse(req_t * req, json_t * request,
+					json_t * response, int32_t requestId,
+					void *sweb, req_store_t * req_store)
+{
+
+	if (strcmp
+	    (json_string_value(json_object_get(response, "ack")), "ok") == 0) {
+
+		json_t *nodeData = json_object_get(request, "nodeData");
+		json_t *id = json_object_get(request, "id");
+
+		json_t *web_resp = json_object();
+		json_object_set_new(web_resp, "type", json_string("newData"));
+		//TODO at the moment only the original node gets the update, which is good enough for me
+		json_t *sessionIds = json_array();
+		json_array_append
+		    (sessionIds, json_object_get(req->request, "sessionId"));
+		json_object_set_new(web_resp, "sessionIds", sessionIds);
+
+		json_t *newData = json_object();
+		json_t *newNodeData = json_array();
+		json_t *element = json_object();
+		json_object_set(element, "id", id);
+		json_object_set(element, "nodeData", nodeData);
+		json_array_append(newNodeData, element);
+		json_object_set_new(newData, "newNodeData", newNodeData);
+
+		json_object_set_new(web_resp, "newData", newData);
+
+		zmsg_t *res = zmsg_new();
+		char *web_res_str = json_dumps(web_resp,
+					       JSON_COMPACT);
+		printf("\nbroker:sweb sent: %s\n", web_res_str);
+		zmsg_addstr(res, web_res_str);
+		free(web_res_str);
+		zmsg_wrap(res, req->address);
+		zmsg_send(&res, sweb);
+		json_decref(web_resp);
+	} else {
+	}
+	request_store_delete(req_store, requestId);
 
 }
 
@@ -586,13 +661,18 @@ void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
 {
 
 	zmsg_t *msg = zmsg_recv(sgraph);
-	zmsg_unwrap(msg);
+	zframe_t *null = zmsg_unwrap(msg);
+	zframe_destroy(&null);
 	json_error_t error;
 	printf("\nbroker:sgraph received: %s\n",
 	       (const char *)zframe_data(zmsg_first(msg)));
-	json_t *graph_resp_json =
-	    json_loads((const char *)zframe_strdup(zmsg_first(msg)), 0,
-		       &error);
+	const char *data;
+	size_t data_size = zframe_size(zmsg_first(msg));
+	data = zframe_data(zmsg_first(msg));
+
+	json_t *graph_resp_json = json_loadb(data,
+					     data_size, 0,
+					     &error);
 	zmsg_destroy(&msg);
 
 	//identify the request
@@ -649,6 +729,15 @@ void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
 					       request,
 					       response,
 					       requestId, spss, req_store);
+
+	else if ((strcmp(resp_type, "newNodeData")
+		  == 0) && (strcmp(req_type, "newNodeData")
+			    == 0))
+
+		graph_response_newNodeDataResponse(req,
+						   request,
+						   response,
+						   requestId, sweb, req_store);
 
 	json_decref(graph_resp_json);
 }

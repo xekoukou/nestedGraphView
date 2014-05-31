@@ -11,6 +11,8 @@ module.exports = {
                 oneOf: [{
                     '$ref': '#/definitions/searchRequest'
                 }, {
+                 /*   '$ref': '#/definitions/getContent'
+                },{   */
                     '$ref': '#/definitions/newNode'
                 }, {
                     '$ref': '#/definitions/delNode'
@@ -144,10 +146,17 @@ module.exports = {
                     },
                     nodeData: {
                         type: 'object',
+                        properties: {
+                            summary: {
+                                type: "string"
+                            },
+                            content: {},
 
+                        },
+                        "additionalProperties": false
                     }
                 },
-                required: ['type', 'content'],
+                required: ['type', 'id', 'nodeData'],
                 "additionalProperties": false
             },
             newLink: {
@@ -356,7 +365,38 @@ module.exports = {
                 }
 
 
+            },
+
+            newNodeData: {
+                type: "array",
+                minItems: 0,
+                items: {
+                    //the same as the request of newNodeData
+                    type: "object",
+                    properties: {
+                        id: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        nodeData: {
+                            type: 'object',
+                            properties: {
+                                summary: {
+                                    type: "string"
+                                },
+                                content: {},
+
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    required: ['id', 'nodeData'],
+                    "additionalProperties": false
+
+                }
             }
+
+
         },
         "additionalProperties": false
     }

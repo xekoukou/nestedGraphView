@@ -7,6 +7,10 @@
 </script>
 <script type="text/javascript" src="jquery-ui.js" >
 </script>
+<script type="text/javascript" src="ace/ace.js" >
+</script>
+<script type="text/javascript" src="Markdown.Converter.js" >
+</script>
 <script type="text/javascript" src="/socket.io/socket.io.js" >
 </script>
 <script type="text/javascript" src="jquery.mousewheel.js" >
@@ -28,7 +32,25 @@
         <div id = 'commands'>
                 <dl> 
 			<dt> esc  </dt>
-                        <dd>  this is esc</dd>
+                        <dd>  
+<ul>
+<li> shows this help text.</li>
+<li> removes the editor and cancels all previous keyboard commands.</li>
+
+</ul></dd>
+<dt> i </dt>
+<dd>Inside a node, the editor pops up that allows you to change its content. </dd>
+<dt> l </dt>
+<dd>
+creates a link between two nodes by moving the cursor to each node and pressing it.
+</dd>
+
+<dt> r </dt>
+<dd> removes a link by moving the curson to each node and pressing it. </dd>
+<dt> d </dt>
+<dd> removes a node that has no links by moving the cursor on the node and pressing it two times. </dd>
+<dt> c </dt>
+<dd> creates a node. </dd>
 		</dl> 
 	</div>
 </body>

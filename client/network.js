@@ -1,3 +1,7 @@
+'use strict';
+
+var surl = "192.168.1.3:8081";
+
 var searchArrayf = function(posX, posY, zoom, searchArray) {
     var power = Math.floor(Math.log(maxHeight / zoom) / Math.LN2) - 1;
     var x = posX - (posX % Math.pow(2, power));
@@ -22,7 +26,7 @@ var searchArrayf = function(posX, posY, zoom, searchArray) {
 function Data(view) {
     this.view = view;
     this.nodes = new Object();
-    this.socket = io.connect('https://' + window.location.host + '/graph');
+    this.socket = io.connect('https://' + surl + '/graph');
 
     this.clientRequestId = 0;
 
@@ -108,6 +112,7 @@ function Data(view) {
 
         });
         console.log("newLink request transmitted");
+        thiss.clientRequestId++;
 
     }
 
@@ -127,6 +132,31 @@ function Data(view) {
         });
 
         console.log("delLink request transmitted");
+        thiss.clientRequestId++;
+
+    }
+
+    this.newNodeData = function(id, summary, content) {
+        var data = {};
+        data.id = id;
+        data.type = 'newNodeData';
+        data.nodeData = {};
+        if (summary != null) {
+            data.nodeData.summary = summary;
+        }
+        if (content != null) {
+            data.nodeData.content = content;
+        }
+
+        this.socket.emit("request", {
+            clientRequestId: thiss.clientRequestId,
+            request: data
+
+        });
+
+        console.log("newNodeData request transmitted");
+        thiss.clientRequestId++;
+
 
     }
 
@@ -136,36 +166,35 @@ function Data(view) {
         var ids = new Array();
         var index = 0;
 
-
-        if (typeof data.newNodes != 'undefined') {
+        var id;
+        if (data.newNodes != null) {
             var newNodes = data.newNodes;
-
+            var i;
             for (i = 0; i < newNodes.length; i++) {
                 var node = newNodes[i];
-                var id = node.id;
+                id = node.id;
                 //remove if it exists 
                 if (id in thiss.nodes) {
                     thiss.view.removeNode(id);
                 }
-                if (typeof node.node.input == 'undefined' || node.node.input == null) {
+                if (node.node.input == null) {
                     node.node.input = new Array();
                 }
-                if (typeof node.node.output == 'undefined' || node.node.output == null) {
+                if (node.node.output == null) {
                     node.node.output = new Array();
                 }
                 thiss.nodes[id] = node;
                 ids[index] = id;
                 index++;
-                view.hardChangeView(view.cleanUnNodes(ids));
 
             }
         }
 
-        if (typeof data.deletedNodes != 'undefined') {
+        if (data.deletedNodes != null) {
             var deletedNodes = data.deletedNodes;
-
+            var i;
             for (i = 0; i < deletedNodes.length; i++) {
-                var id = deletedNodes[i];
+                id = deletedNodes[i];
                 //remove if it exists 
                 if (id in thiss.nodes) {
                     thiss.view.removeNode(id);
@@ -174,7 +203,7 @@ function Data(view) {
             }
         }
 
-        if (typeof data.newLinks != 'undefined') {
+        if (data.newLinks != null) {
             //TODO grab the two nodes and transfer the data
             var newLinks = data.newLinks;
 
@@ -201,7 +230,7 @@ function Data(view) {
             }
         }
 
-        if (typeof data.delLinks != 'undefined') {
+        if (data.delLinks != null) {
             //TODO grab the two nodes and transfer the data
             var delLinks = data.delLinks;
 
@@ -244,6 +273,37 @@ function Data(view) {
             }
         }
 
+        if (data.newNodeData != null) {
+            var newNodeData = data.newNodeData;
+            var i;
+            for (i = 0; i < newNodeData.length; i++) {
+                var nd = newNodeData[i];
+                id = nd.id;
+                var node;
+                //remove if it exists 
+                if (id in thiss.nodes) {
+                    node = thiss.nodes[id];
+                    if (nd.nodeData.summary != null) {
+                        node.node.nodeData.summary = nd.nodeData.summary;
+                    }
+                    if (nd.nodeData.content != null) {
+                        node.node.nodeData.content = nd.nodeData.content;
+                    }
+                    if (node.node.input == null) {
+                        node.node.input = new Array();
+                    }
+                    if (node.node.output == null) {
+                        node.node.output = new Array();
+                    }
+                    thiss.view.removeNode(id);
+                    thiss.nodes[id] = node;
+                    ids[index] = id;
+                    index++;
+                }
+            }
+        }
+
+
 
         view.hardChangeView(view.cleanUnNodes(ids));
 
@@ -271,7 +331,7 @@ function Data(view) {
             var ids = new Array();
 
 
-
+            var i;
             for (i = 0; i < nodeArray.length; i++) {
                 var node = nodeArray[i];
                 var id = node.id;
@@ -303,7 +363,9 @@ function Data(view) {
 
     this.empty = function() {
 
-        Object.keys(this.nodes).forEach(this.view.removeNode(id));
+        Object.keys(this.nodes).forEach(function(id) {
+            this.view.removeNode(id)
+        });
 
     }
 }

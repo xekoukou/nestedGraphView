@@ -23,10 +23,11 @@ module.exports = {
                 console.log('received invalid data');
                 console.log(report);
                 console.log("suberrors:");
-
-                var i;
-                for (i = 0; i < report.error.subErrors.length; i++) {
-                    console.log(report.error.subErrors[i]);
+                if (report.error.subErrors != null) {
+                    var i;
+                    for (i = 0; i < report.error.subErrors.length; i++) {
+                        console.log(report.error.subErrors[i]);
+                    }
                 }
             }
         });

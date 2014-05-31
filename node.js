@@ -32,11 +32,9 @@ module.exports = {
                     summary: {
                         type: "string"
                     },
-                    content: {
-                        type: "string"
-                    }
+                    content: {}
                 },
-                required: ["summary", "content"]
+                required: ["summary"]
             },
 
         },
@@ -62,11 +60,8 @@ module.exports = {
                             summary: {
                                 type: "String"
                             },
-                            content: {
-                                type: "String"
-                            }
+                            content: {}
                         },
-                        required: ["content", "summary"]
                     }
                 },
                 required: ["id", "origId", "endId", "linkData"]

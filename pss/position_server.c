@@ -39,7 +39,7 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 						    json_integer(res_item->y));
 				json_object_set_new(node, "id",
 						    json_integer(res_item->id));
-				json_array_append(node_array, node);
+				json_array_append_new(node_array, node);
 
 				res_item =
 				    (pos_id_t *) quadbit_iter_next(&qiter);
@@ -55,7 +55,7 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 						    json_integer(res_item->y));
 				json_object_set_new(node, "id",
 						    json_integer(res_item->id));
-				json_array_append(node_array, node);
+				json_array_append_new(node_array, node);
 			}
 		}
 	}
@@ -211,12 +211,12 @@ int main(int argc, char *argv[])
 			printf("\nposition server received: %s\n",
 			       (const char *)zframe_data(zmsg_first(msg)));
 
+			const char *data;
+			size_t data_size = zframe_size(zmsg_first(msg));
+			data = zframe_data(zmsg_first(msg));
 			json_t *request_json;
 			json_error_t error;
-			request_json = json_loads((const char *)
-						  zframe_strdup(zmsg_first
-								(msg)), 0,
-						  &error);
+			request_json = json_loadb(data, data_size, 0, &error);
 			zmsg_destroy(&msg);
 
 			json_t *response;
@@ -261,10 +261,9 @@ int main(int argc, char *argv[])
 			if (response) {
 				json_t *response_json = json_object();
 
-				json_object_set_new(response_json, "requestId",
-						    json_object_get
-						    (request_json,
-						     "requestId"));
+				json_object_set(response_json, "requestId",
+						json_object_get
+						(request_json, "requestId"));
 				json_object_set_new(response_json, "response",
 						    response);
 
