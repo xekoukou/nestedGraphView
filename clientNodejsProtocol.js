@@ -11,7 +11,7 @@ module.exports = {
                 oneOf: [{
                     '$ref': '#/definitions/searchRequest'
                 }, {
-                 /*   '$ref': '#/definitions/getContent'
+                    /*   '$ref': '#/definitions/getContent'
                 },{   */
                     '$ref': '#/definitions/newNode'
                 }, {
@@ -153,7 +153,12 @@ module.exports = {
                             content: {},
 
                         },
-                        "additionalProperties": false
+                        "additionalProperties": false,
+                        oneof: [{
+                            required: ["summary"]
+                        }, {
+                            required: ["content"]
+                        }]
                     }
                 },
                 required: ['type', 'id', 'nodeData'],
@@ -166,22 +171,8 @@ module.exports = {
                         enum: ['newLink']
                     },
                     link: {
-                        type: "object",
-                        properties: {
-                            'origId': {
-                                type: 'integer',
-                                minimum: 1
-                            },
-                            'endId': {
-                                type: 'integer',
-                                minimum: 1
-                            },
-                            linkData: {
-                                type: "object"
-                            },
-                        },
-                        required: ["origId", "endId", "linkData"],
-                        "additionalProperties": false
+                        //linkData id set to -1 means new product or variable
+                        "$ref": "node.js#/definitions/link"
                     }
                 },
                 required: ['type', 'link'],
@@ -204,19 +195,70 @@ module.exports = {
                                 type: 'integer',
                                 minimum: 1
                             },
-                            id: {
-                                type: "integer",
-                                minimum: 1
+                            linkData: {
+                                type: "object",
+                                properties: {
+                                    id: {
+                                        type: "integer",
+                                        minimum: 1
+                                    }
+                                },
+                                required: ["id"]
                             },
                         },
-                        required: ["origId", "endId", "id"],
+                        required: ["origId", "endId", "linkData"],
                         "additionalProperties": false
                     }
                 },
                 required: ['type', 'link'],
                 "additionalProperties": false
 
+            },
+            newLinkData: {
+                type: "object",
+                properties: {
+                    'type': {
+                        enum: ['newLinkData']
+                    },
+                    link: {
+                        type: "object",
+                        properties: {
+                            origId: {
+                                type: "integer",
+                                minimum: 1
+                            },
+                            endId: {
+                                type: "integer",
+                                minimum: 1
+                            },
+                            linkData: {
+                                type: 'object',
+                                properties: {
+                                    id: {
+                                        type: "integer",
+                                        minimum: 1
+                                    },
+                                    summary: {
+                                        type: "string"
+                                    },
+                                    content: {},
+
+                                },
+                                "additionalProperties": false,
+                                oneof: [{
+                                    required: ["id", "summary"]
+                                }, {
+                                    required: ["id", "content"]
+                                }]
+                            }
+                        },
+                        required: ['origId', "endId", 'linkData'],
+                    }
+                },
+                required: ['type', 'link'],
+                "additionalProperties": false
             }
+
         }
     },
 
@@ -394,7 +436,15 @@ module.exports = {
                     "additionalProperties": false
 
                 }
-            }
+            },
+            newLinkData: {
+                type: "array",
+                minItems: 0,
+                items: {
+                    "$ref": "#/request/definitions/newLinkData/link"
+                }
+            },
+
 
 
         },

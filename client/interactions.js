@@ -10,6 +10,7 @@ var interactions = function(view) {
     var dKey = 68;
     var rKey = 82;
     var lKey = 76;
+    var pKey = 80;
     var mouseX;
     var mouseY;
 
@@ -158,10 +159,20 @@ var interactions = function(view) {
                 if (editor != null) {
                     var value = editor.getValue();
                     editor.destroy();
-                    $("." + ids[0] + ".summary").empty();
-                    $("." + ids[0] + ".summary").css("width", "").css("height", "");
-                    $("." + ids[0] + ".nestedGraphNode").css("z-index", "");
-                    view.data.newNodeData(ids[0], value, null);
+                    if (productView) {
+
+                        $("." + ids[0] + "." + productId[0] + ".summary").empty();
+                        $("." + ids[0] + "." + productId[0] + ".summary").css("width", "").css("height", "");
+                        $("." + ids[0] + "." + productId[0] + ".nestedGraphNode").css("z-index", "");
+                        //TODO fix that
+                        view.data.newNodeData(ids[0], value, null);
+
+                    } else {
+                        $("." + ids[0] + ".summary").empty();
+                        $("." + ids[0] + ".summary").css("width", "").css("height", "");
+                        $("." + ids[0] + ".nestedGraphNode").css("z-index", "");
+                        view.data.newNodeData(ids[0], value, null);
+                    }
                     index = 0;
                     editing = 0;
                 }
@@ -197,14 +208,30 @@ var interactions = function(view) {
                 if (inside == 1) {
                     editing = 1;
                     index++;
-                    $("." + ids[0] + ".summary").css("width", "400px").css("height", "500px");
                     $("." + ids[0] + ".nestedGraphNode").css("z-index", 5);
-                    $("." + ids[0] + ".summary").empty();
-                    var DocElement = $("." + ids[0] + ".summary").get(0);
-                    editor = ace.edit(DocElement);
-                    editor.getSession().setMode("ace/mode/markdown");
-                    editor.setValue(view.data.nodes[ids[0]].node.nodeData.summary, -1);
+                    if (productView) {
+                        $("." + ids[0] + "." + productId[0] + ".summary").css("width", "400px").css("height", "500px");
+                        $("." + ids[0] + "." + productId[0] + ".summary").empty();
+                        var DocElement = $("." + ids[0] + "." + productId[0] + ".summary").get(0);
+                        editor = ace.edit(DocElement);
+                        editor.getSession().setMode("ace/mode/markdown");
+                        var node = view.data.nodes[ids[0]].node;
+                        var j;
+                        for (j = 0; j < node.output.length; j++) {
+                            if (node.output[j].linkData.id == productId[0]) {
+                                editor.setValue(node.output[j].linkData.summary, -1);
+                                break;
+                            }
+                        }
 
+                    } else {
+                        $("." + ids[0] + ".summary").css("width", "400px").css("height", "500px");
+                        $("." + ids[0] + ".summary").empty();
+                        var DocElement = $("." + ids[0] + ".summary").get(0);
+                        editor = ace.edit(DocElement);
+                        editor.getSession().setMode("ace/mode/markdown");
+                        editor.setValue(view.data.nodes[ids[0]].node.nodeData.summary, -1);
+                    }
                 }
             }
 
@@ -226,8 +253,8 @@ var interactions = function(view) {
                 node.input = new Array();
                 node.output = new Array();
                 node.id = -1;
-                node.nodeData.summary = 'summary';
-                node.nodeData.content = 'content';
+                node.nodeData.summary = 'process';
+                node.nodeData.content = 'process content';
                 view.data.newNode(posX, posY, node);
                 cleanAllBut("");
             }
@@ -237,10 +264,18 @@ var interactions = function(view) {
                 if (nkeys["lKey"] === 0) {
                     nkeys["lKey"]++;
                     index++;
+
                 } else {
                     if (nkeys["lKey"] == 1) {
-                        console.log("inserted link:ids:" + ids[0] + ' , ' + ids[1]);
-                        view.data.newLink(ids[0], ids[1], {});
+                        if (!productView) {
+                            productId[0] = -1;
+                        }
+                        console.log("inserted link:ids:" + ids[0] + ' , ' + ids[1] + " productId:" + productId[0]);
+                        view.data.newLink(ids[0], ids[1], {
+                            id: productId[0],
+                            summary: "product",
+                            content: "product content"
+                        });
                         nkeys["lKey"] = 0;
                         index = 0;
                     }
@@ -254,19 +289,23 @@ var interactions = function(view) {
                     index++;
                 } else {
                     if (nkeys["rKey"] == 1) {
-                        console.log("deleted link:ids:" + ids[0] + ' , ' + ids[1]);
+                        console.log("deleted link:ids:" + ids[0] + ' , ' + ids[1] + " productId:" + productId[0]);
                         //find the link
                         var output = view.data.nodes[ids[0]].node.output;
-                        var i;
-                        var id = null;
-                        for (i = 0; i < output.length; i++) {
-                            if (output[i].endId == ids[1]) {
-                                id = output[i].id;
-                                break;
+                        var id = -1;
+                        if (productView) {
+                            id = productId[0];
+                        } else {
+                            var i;
+                            for (i = 0; i < output.length; i++) {
+                                if (output[i].endId == ids[1]) {
+                                    id = output[i].linkData.id;
+                                    break;
+                                }
                             }
                         }
-                        if (id) {
-                            view.data.delLink(ids[0], ids[1], output[i].id);
+                        if (id != -1) {
+                            view.data.delLink(ids[0], ids[1], id);
                         } else {
                             //TODO inform the user that there is no such link
                         }
@@ -294,7 +333,14 @@ var interactions = function(view) {
                 }
                 cleanAllBut("dKey");
             }
+            if (event.which == pKey) {
+                productView = !productView;
 
+                var idss = Object.keys(view.data.nodes);
+                view.removeAllNodeDoms();
+                view.hardChangeView(idss);
+
+            }
 
 
             //TODO add more actions 

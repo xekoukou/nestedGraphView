@@ -126,7 +126,9 @@ function Data(view) {
                 link: {
                     origId: origId,
                     endId: endId,
-                    id: id
+                    linkData: {
+                        id: id
+                    }
                 }
             }
         });
@@ -135,7 +137,7 @@ function Data(view) {
         thiss.clientRequestId++;
 
     }
-
+    //one of summary or content should be null
     this.newNodeData = function(id, summary, content) {
         var data = {};
         data.id = id;
@@ -159,6 +161,37 @@ function Data(view) {
 
 
     }
+
+    //one of summary or content should be null
+    this.newLinkData = function(origId, endId, id, summary, content) {
+        var data = {
+            type: 'newLinkData',
+            link: {
+                origId: origId,
+                endId: endId
+            }
+        };
+        data.link.linkData = {};
+        data.link.linkData.id = id;
+        if (summary != null) {
+            data.link.linkData.summary = summary;
+        }
+        if (content != null) {
+            data.link.linkData.content = content;
+        }
+
+        this.socket.emit("request", {
+            clientRequestId: thiss.clientRequestId,
+            request: data
+
+        });
+
+        console.log("newLinkData request transmitted");
+        thiss.clientRequestId++;
+
+
+    }
+
 
     this.socket.on("newData", function(data) {
         console.log("newData:" + JSON.stringify(data));
@@ -243,7 +276,7 @@ function Data(view) {
                     var input = node.node.input;
                     var j;
                     for (j = 0; j < input.length; j++) {
-                        if (input[j].id == link.id) {
+                        if ((input[j].linkData.id == link.linkData.id) && (input[j].origId == origId)) {
                             input.splice(j, 1);
 
                             break;
@@ -259,7 +292,7 @@ function Data(view) {
                     var output = node.node.output;
                     var j;
                     for (j = 0; j < output.length; j++) {
-                        if (output[j].id == link.id) {
+                        if ((output[j].linkData.id == link.linkData.id) && (output[j].endId == endId)) {
                             output.splice(j, 1);
 
                             break;
@@ -302,6 +335,57 @@ function Data(view) {
                 }
             }
         }
+
+        //TODO
+        if (data.newLinkData != null) {
+            //TODO grab the two nodes and transfer the data
+            var newLinkData = data.newLinkData;
+
+            for (i = 0; i < newLinkData.length; i++) {
+                var link = newLinkData[i];
+                var origId = link.origId;
+                var endId = link.endId;
+                if (endId in thiss.nodes) {
+                    var node = thiss.nodes[endId];
+                    var j;
+                    var input = node.node.input;
+                    for (j = 0; j < input.length; j++) {
+                        if (link.linkData.id == input[j].linkData.id) {
+                            if (link.linkData.summary != null) {
+                                input[j].linkData.summary = link.linkData.summary;
+                            }
+                            if (link.linkData.content != null) {
+                                input[j].linkData.content = link.linkData.content;
+                            }
+                        }
+                    }
+                    thiss.view.removeNode(endId);
+                    thiss.nodes[endId] = node;
+                    ids[index] = endId;
+                    index++;
+                }
+                if (origId in thiss.nodes) {
+                    var node = thiss.nodes[origId];
+                    var j;
+                    var output = node.node.output;
+                    for (j = 0; j < output.length; j++) {
+                        if (link.linkData.id == output[j].linkData.id) {
+                            if (link.linkData.summary != null) {
+                                output[j].linkData.summary = link.linkData.summary;
+                            }
+                            if (link.linkData.content != null) {
+                                output[j].linkData.content = link.linkData.content;
+                            }
+                        }
+                        thiss.view.removeNode(origId);
+                        thiss.nodes[origId] = node;
+                        ids[index] = origId;
+                        index++;
+                    }
+                }
+            }
+        }
+
 
 
 

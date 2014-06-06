@@ -45,9 +45,6 @@ module.exports = {
             link: {
                 type: "object",
                 properties: {
-                    id: {
-                        type: "integer"
-                    },
                     origId: {
                         type: "integer"
                     },
@@ -57,14 +54,21 @@ module.exports = {
                     linkData: {
                         type: "object",
                         properties: {
+                            //there may be many link with the same data per node.
+                            //for example the same product tranfered to multiple destinations or the same varriable sent to many functions
+                            //We need to show only one instance of that product varriable
+                            id: {
+                                type: "integer"
+                            },
                             summary: {
                                 type: "String"
                             },
                             content: {}
                         },
+                        required: ["id", "summary"]
                     }
                 },
-                required: ["id", "origId", "endId", "linkData"]
+                required: ["origId", "endId", "linkData"]
             }
 
         }

@@ -139,6 +139,25 @@ void web_request_newNodeData(int32_t requestId, json_t * request, void *sgraph)
 
 }
 
+void web_request_newLinkData(int32_t requestId, json_t * request, void *sgraph)
+{
+	json_t *graph_request = json_object();
+	json_object_set_new(graph_request, "requestId",
+			    json_integer(requestId));
+	json_object_set(graph_request, "request", request);
+
+	zmsg_t *req = zmsg_new();
+	char *graph_req_str = json_dumps(graph_request,
+					 JSON_COMPACT);
+	printf("\nbroker:sgraph sent: %s\n", graph_req_str);
+	zmsg_addstr(req, graph_req_str);
+	free(graph_req_str);
+	zmsg_send(&req, sgraph);
+
+	json_decref(graph_request);
+
+}
+
 void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 {
 
@@ -188,6 +207,9 @@ void web_request(void *sweb, req_store_t * req_store, void *spss, void *sgraph)
 	else if (strcmp(type, "newNodeData") == 0)
 
 		web_request_newNodeData(requestId, request, sgraph);
+	else if (strcmp(type, "newLinkData") == 0)
+
+		web_request_newLinkData(requestId, request, sgraph);
 	else {
 
 		//TODO process request
@@ -502,7 +524,8 @@ void graph_response_newLinkResponse(req_t * req, json_t * request,
 		json_t *link = json_object_get(request,
 					       "link");
 		//set the id of the link
-		json_object_set(link, "id", json_object_get(response, "id"));
+		json_object_set(json_object_get(link, "linkData"), "id",
+				json_object_get(response, "id"));
 
 		json_t *web_resp = json_object();
 		json_object_set_new(web_resp, "type", json_string("newData"));
@@ -656,6 +679,47 @@ void graph_response_newNodeDataResponse(req_t * req, json_t * request,
 
 }
 
+void graph_response_newLinkDataResponse(req_t * req, json_t * request,
+					json_t * response, int32_t requestId,
+					void *sweb, req_store_t * req_store)
+{
+
+	if (strcmp
+	    (json_string_value(json_object_get(response, "ack")), "ok") == 0) {
+
+		json_t *link = json_object_get(request, "link");
+
+		json_t *web_resp = json_object();
+		json_object_set_new(web_resp, "type",
+				    json_string("newLinkData"));
+		//TODO at the moment only the original node gets the update, which is good enough for me
+		json_t *sessionIds = json_array();
+		json_array_append
+		    (sessionIds, json_object_get(req->request, "sessionId"));
+		json_object_set_new(web_resp, "sessionIds", sessionIds);
+
+		json_t *newData = json_object();
+		json_t *newLinkData = json_array();
+		json_array_append(newLinkData, link);
+		json_object_set_new(newData, "newLinkData", newLinkData);
+
+		json_object_set_new(web_resp, "newData", newData);
+
+		zmsg_t *res = zmsg_new();
+		char *web_res_str = json_dumps(web_resp,
+					       JSON_COMPACT);
+		printf("\nbroker:sweb sent: %s\n", web_res_str);
+		zmsg_addstr(res, web_res_str);
+		free(web_res_str);
+		zmsg_wrap(res, req->address);
+		zmsg_send(&res, sweb);
+		json_decref(web_resp);
+	} else {
+	}
+	request_store_delete(req_store, requestId);
+
+}
+
 void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
 		    void *spss)
 {
@@ -735,6 +799,15 @@ void graph_response(void *sgraph, req_store_t * req_store, void *sweb,
 			    == 0))
 
 		graph_response_newNodeDataResponse(req,
+						   request,
+						   response,
+						   requestId, sweb, req_store);
+
+	else if ((strcmp(resp_type, "newLinkData")
+		  == 0) && (strcmp(req_type, "newLinkData")
+			    == 0))
+
+		graph_response_newLinkDataResponse(req,
 						   request,
 						   response,
 						   requestId, sweb, req_store);
