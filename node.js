@@ -9,6 +9,12 @@ module.exports = {
             id: {
                 type: "integer"
             },
+            setId: {
+                type: "integer"
+            },
+            ancestorId: {
+                type: "integer"
+            },
             parentId: {
                 type: "integer"
             },
@@ -29,27 +35,52 @@ module.exports = {
             nodeData: {
                 type: "object",
                 properties: {
+                    id: {
+                        type: "integer"
+                    },
+                    hid: {
+                        type: "string" //the sha2 of the previous historic identifier
+                    },
+
                     summary: {
                         type: "string"
                     },
-                    content: {}
+                    content: {
+                        type: "string"
+                    }
                 },
-                required: ["summary"]
+                required: ["id", "hid"]
             },
 
         },
-        required: ["id", "parentId", "input", "output", "nodeData"],
+        required: ["id", "hid", "parentId", "input", "output", "nodeData"],
 
         definitions: {
 
             link: {
                 type: "object",
                 properties: {
-                    origId: {
-                        type: "integer"
+                    "origId": {
+                        type: "integer",
+                        minimum: 1
                     },
-                    endId: {
-                        type: "integer"
+                    "origSetId": {
+                        type: "integer",
+                    },
+                    "origAncestorId": {
+                        type: "integer",
+                        minimum: 1
+                    },
+                    "endId": {
+                        type: "integer",
+                        minimum: 1
+                    },
+                    "endSetId": {
+                        type: "integer",
+                    },
+                    "endAncestorId": {
+                        type: "integer",
+                        minimum: 1
                     },
                     linkData: {
                         type: "object",
@@ -58,17 +89,28 @@ module.exports = {
                             //for example the same product tranfered to multiple destinations or the same varriable sent to many functions
                             //We need to show only one instance of that product varriable
                             id: {
-                                type: "integer"
+                                type: "integer",
+                                minimum: 1
+                            },
+                            setId: {
+                                type: "integer",
+                            },
+                            ancestorId: {
+                                type: "integer",
+                                minimum: 1
+
                             },
                             summary: {
                                 type: "String"
                             },
-                            content: {}
+                            content: {
+                                type: "String"
+                            }
                         },
-                        required: ["id", "summary"]
+                        required: ["id", "setId", "ancestorId"]
                     }
                 },
-                required: ["origId", "endId", "linkData"]
+                required: ["origId", "origSetId", "origAncestorId", "endId", "endSetId", "endAncestorId", "linkData"]
             }
 
         }

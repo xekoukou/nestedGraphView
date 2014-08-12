@@ -28,9 +28,6 @@ void web_request_newNode(int32_t requestId, json_t * request, void *sgraph)
 			    json_integer(requestId));
 	json_t *newNodeRequest = json_object();
 	json_object_set_new(newNodeRequest, "type", json_string("newNode"));
-	json_object_set(newNodeRequest, "node",
-			json_object_get(json_object_get(request, "node"),
-					"node"));
 	json_object_set_new(graph_request, "request", newNodeRequest);
 
 	zmsg_t *req = zmsg_new();
@@ -233,6 +230,7 @@ void pss_response_searchResponse(req_t * req, json_t * response,
 	json_t *nodeArray = json_object_get(response, "nodeArray");
 
 	json_t *idArray = json_array();
+	json_t *ancestorIdArray = json_array();
 
 	int i;
 	for (i = 0; i < json_array_size(nodeArray); i++) {
@@ -240,6 +238,9 @@ void pss_response_searchResponse(req_t * req, json_t * response,
 		json_array_append(idArray,
 				  json_object_get(json_array_get
 						  (nodeArray, i), "id"));
+		json_array_append(ancestorIdArray,
+				  json_object_get(json_array_get
+						  (nodeArray, i), "ancestorId"));
 
 	}
 
@@ -250,6 +251,7 @@ void pss_response_searchResponse(req_t * req, json_t * response,
 	json_object_set_new(retrieveRequest, "type",
 			    json_string("retrieveRequest"));
 	json_object_set_new(retrieveRequest, "idArray", idArray);
+	json_object_set_new(retrieveRequest, "ancestorIdArray", ancestorIdArray);
 	json_object_set_new(graph_request, "request", retrieveRequest);
 
 	zmsg_t *mreq = zmsg_new();
@@ -858,11 +860,11 @@ int main(int argc, char *argv[])
 	port++;
 	rc = zsocket_bind(sgraph, "tcp://%s:%d", argv[1], port);
 	if (rc != port) {
-		printf("\nThe broker:spss could't bind to %s:%d", argv[1],
+		printf("\nThe broker:sgraph could't bind to %s:%d", argv[1],
 		       port);
 		exit(-1);
 	} else {
-		printf("\nThe broker:spss did bind to %s:%d", argv[1], port);
+		printf("\nThe broker:sgraph did bind to %s:%d", argv[1], port);
 	}
 	//initialize request store
 	req_store_t *req_store;

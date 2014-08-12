@@ -83,12 +83,9 @@ module.exports = {
                             posY: {
                                 type: "integer",
                                 minimum: 0
-                            },
-                            node: {
-                                "$ref": "node.js#/node"
                             }
                         },
-                        required: ['posX', 'posY', 'node'],
+                        required: ['posX', 'posY'],
                         "additionalProperties": false
                     }
                 },
@@ -105,9 +102,16 @@ module.exports = {
                     "id": {
                         type: "integer",
                         minimum: 1
+                    },
+                    "setId": {
+                        type: "integer",
+                    },
+                    "ancestorId": {
+                        type: "integer",
+                        minimum: 1
                     }
                 },
-                required: ['type', 'id'],
+                required: ['type', 'id', 'setId', 'ancestorId'],
                 "additionalProperties": false
 
             },
@@ -122,6 +126,9 @@ module.exports = {
                         type: "integer",
                         minimum: 1
                     },
+                    setId: {
+                        type: "integer",
+                    },
                     posX: {
                         type: 'integer',
                         minimum: 0
@@ -131,7 +138,7 @@ module.exports = {
                         minimum: 0
                     }
                 },
-                required: ['type', 'id', 'posX', 'posY'],
+                required: ['type', 'id', 'setId', 'posX', 'posY'],
                 "additionalProperties": false
             },
             newNodeData: {
@@ -140,28 +147,42 @@ module.exports = {
                     'type': {
                         enum: ['newNodeData']
                     },
-                    id: {
+                    "id": {
+                        type: "integer",
+                        minimum: 1
+                    },
+                    "setId": {
+                        type: "integer",
+                    },
+                    "ancestorId": {
                         type: "integer",
                         minimum: 1
                     },
                     nodeData: {
                         type: 'object',
                         properties: {
+                            id: {
+                                type: "integer"
+                            },
+                            setId: {
+                                type: "integer"
+                            },
+                            ancestorId: {
+                                type: "integer"
+                            },
+
                             summary: {
                                 type: "string"
                             },
-                            content: {},
+                            content: {
+                                type: "string"
+                            },
 
                         },
                         "additionalProperties": false,
-                        oneof: [{
-                            required: ["summary"]
-                        }, {
-                            required: ["content"]
-                        }]
                     }
                 },
-                required: ['type', 'id', 'nodeData'],
+                required: ['type', 'id', 'setId', 'ancestorId', 'nodeData'],
                 "additionalProperties": false
             },
             newLink: {
@@ -171,10 +192,36 @@ module.exports = {
                         enum: ['newLink']
                     },
                     link: {
-                        //linkData id set to -1 means new product or variable
-                        "$ref": "node.js#/definitions/link"
+                        type: "object",
+                        properties: {
+                            "origId": {
+                                type: "integer",
+                                minimum: 1
+                            },
+                            "origSetId": {
+                                type: "integer",
+                            },
+                            "origAncestorId": {
+                                type: "integer",
+                                minimum: 1
+                            },
+                            "endId": {
+                                type: "integer",
+                                minimum: 1
+                            },
+                            "endSetId": {
+                                type: "integer",
+                            },
+                            "endAncestorId": {
+                                type: "integer",
+                                minimum: 1
+                            }
+                        },
+                        required: ["origId", "origSetId", "origAncestorId", "endId", "endSetId", "endAncestorId"]
                     }
+
                 },
+
                 required: ['type', 'link'],
                 "additionalProperties": false
             },
@@ -185,29 +232,7 @@ module.exports = {
                         enum: ['delLink']
                     },
                     link: {
-                        type: "object",
-                        properties: {
-                            'origId': {
-                                type: 'integer',
-                                minimum: 1
-                            },
-                            'endId': {
-                                type: 'integer',
-                                minimum: 1
-                            },
-                            linkData: {
-                                type: "object",
-                                properties: {
-                                    id: {
-                                        type: "integer",
-                                        minimum: 1
-                                    }
-                                },
-                                required: ["id"]
-                            },
-                        },
-                        required: ["origId", "endId", "linkData"],
-                        "additionalProperties": false
+                        "$ref": "node.js#/definitions/link"
                     }
                 },
                 required: ['type', 'link'],
@@ -221,38 +246,7 @@ module.exports = {
                         enum: ['newLinkData']
                     },
                     link: {
-                        type: "object",
-                        properties: {
-                            origId: {
-                                type: "integer",
-                                minimum: 1
-                            },
-                            endId: {
-                                type: "integer",
-                                minimum: 1
-                            },
-                            linkData: {
-                                type: 'object',
-                                properties: {
-                                    id: {
-                                        type: "integer",
-                                        minimum: 1
-                                    },
-                                    summary: {
-                                        type: "string"
-                                    },
-                                    content: {},
-
-                                },
-                                "additionalProperties": false,
-                                oneof: [{
-                                    required: ["id", "summary"]
-                                }, {
-                                    required: ["id", "content"]
-                                }]
-                            }
-                        },
-                        required: ['origId', "endId", 'linkData'],
+                        "$ref": "node.js#/definitions/link"
                     }
                 },
                 required: ['type', 'link'],
@@ -292,9 +286,6 @@ module.exports = {
                         items: {
                             type: "object",
                             properties: {
-                                id: {
-                                    type: "integer"
-                                },
                                 posX: {
                                     type: "integer",
                                     minimum: 0
@@ -309,7 +300,7 @@ module.exports = {
 
 
                             },
-                            required: ["id", "posX", "posY", "node"],
+                            required: ["posX", "posY", "node"],
                             "additionalProperties": false
                         }
                     }
@@ -337,9 +328,6 @@ module.exports = {
                 items: {
                     type: "object",
                     properties: {
-                        id: {
-                            type: "integer"
-                        },
                         posX: {
                             type: "integer",
                             minimum: 0
@@ -354,7 +342,7 @@ module.exports = {
 
 
                     },
-                    required: ["id", "posX", "posY", "node"],
+                    required: ["posX", "posY", "node"],
                     "additionalProperties": false
                 }
             },
@@ -366,11 +354,14 @@ module.exports = {
                     properties: {
                         id: {
                             type: "integer"
+                        },
+                        setId: {
+                            type: "integer"
                         }
 
 
                     },
-                    required: ["id"],
+                    required: ["id", "setId"],
                     "additionalProperties": false
                 }
 
@@ -386,24 +377,8 @@ module.exports = {
                 type: "array",
                 minItems: 0,
                 items: {
-                    //TODO is this the correct syntax
-                    type: "object",
-                    properties: {
-                        'origId': {
-                            type: 'integer',
-                            minimum: 1
-                        },
-                        'endId': {
-                            type: 'integer',
-                            minimum: 1
-                        },
-                        id: {
-                            type: "integer",
-                            minimum: 1
-                        },
-                    },
-                    required: ["origId", "endId", "id"],
-                    "additionalProperties": false
+                    "$ref": "node.js#/node/definitions/link"
+
                 }
 
 
@@ -420,13 +395,34 @@ module.exports = {
                             type: "integer",
                             minimum: 1
                         },
+                        setId: {
+                            type: "integer"
+                        },
+                        ancestorId: {
+                            type: "integer",
+                            minimum: 1
+                        },
+
                         nodeData: {
                             type: 'object',
                             properties: {
+                                id: {
+                                    type: "integer",
+                                    minimum: 1
+                                },
+                                setId: {
+                                    type: "integer"
+                                },
+                                ancestorId: {
+                                    type: "integer",
+                                    minimum: 1
+                                },
                                 summary: {
                                     type: "string"
                                 },
-                                content: {},
+                                content: {
+                                    type: "string"
+                                },
 
                             },
                             "additionalProperties": false

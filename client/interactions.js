@@ -248,14 +248,7 @@ var interactions = function(view) {
                 node.parentId = parentId;
                 var posY = Math.floor(view.posY + mouseY / view.zoom);
                 var posX = Math.floor(view.posX + mouseX / view.zoom);
-                //TODO temporary
-                node.nodeData = new Object();
-                node.input = new Array();
-                node.output = new Array();
-                node.id = -1;
-                node.nodeData.summary = 'process';
-                node.nodeData.content = 'process content';
-                view.data.newNode(posX, posY, node);
+                view.data.newNode(posX, posY);
                 cleanAllBut("");
             }
 

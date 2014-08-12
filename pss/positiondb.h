@@ -28,6 +28,7 @@ struct pos_id_t {
 	int64_t x;
 	int64_t y;
 	int64_t id;
+        int64_t ancestorId;
 
 };
 typedef struct pos_id_t pos_id_t;

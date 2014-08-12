@@ -36,6 +36,9 @@ module.exports {
                             id: {
                                 type: "integer"
                             },
+                            ancestorId: {
+                                type: "integer"
+                            },
                             posX: {
                                 type: "integer",
                                 minimum: 0
@@ -47,7 +50,7 @@ module.exports {
 
 
                         },
-                        required: ["id", "posX", "posY"]
+                        required: ["id","ancestorId", "posX", "posY"]
                     }
                 },
                 required: ["type", "node"]
@@ -94,6 +97,9 @@ module.exports {
                                 id: {
                                     type: "integer"
                                 },
+                                ancestorId: {
+                                    type: "integer"
+                                }
                                 posX: {
                                     type: "integer",
                                     minimum: 0
@@ -105,7 +111,7 @@ module.exports {
 
 
                             },
-                            required: ["id", "posX", "posY"]
+                            required: ["id","ancestorId","posX", "posY"]
                         }
                     }
 

@@ -39,6 +39,9 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 						    json_integer(res_item->y));
 				json_object_set_new(node, "id",
 						    json_integer(res_item->id));
+				json_object_set_new(node, "ancestorId",
+						    json_integer
+						    (res_item->ancestorId));
 				json_array_append_new(node_array, node);
 
 				res_item =
@@ -55,6 +58,9 @@ json_t *search(quadbit_t * quadbit, json_t * request)
 						    json_integer(res_item->y));
 				json_object_set_new(node, "id",
 						    json_integer(res_item->id));
+				json_object_set_new(node, "ancestorId",
+						    json_integer
+						    (res_item->ancestorId));
 				json_array_append_new(node_array, node);
 			}
 		}
@@ -75,6 +81,8 @@ json_t *insert(positiondb_t * positiondb, quadbit_t * quadbit, json_t * json)
 	item->x = json_integer_value(json_object_get(json_data, "posX"));
 	item->y = json_integer_value(json_object_get(json_data, "posY"));
 	item->id = json_integer_value(json_object_get(json_data, "id"));
+	item->ancestorId =
+	    json_integer_value(json_object_get(json_data, "ancestorId"));
 
 //do not accept a new node with the same location
 	if (quadbit_search(quadbit, (quadbit_item_t *) item)) {
@@ -105,6 +113,8 @@ json_t *newPosition(positiondb_t * positiondb, quadbit_t * quadbit,
 	item->x = json_integer_value(json_object_get(json, "posX"));
 	item->y = json_integer_value(json_object_get(json, "posY"));
 	item->id = json_integer_value(json_object_get(json, "id"));
+	item->ancestorId =
+	    json_integer_value(json_object_get(json, "ancestorId"));
 
 //delete the previous position
 	pos_id_t prev_pos_id;
@@ -161,7 +171,7 @@ int main(int argc, char *argv[])
 
 	if (argc != 3) {
 		printf
-		    ("\nPlease provide the ip address for the server to connect and the port");
+		    ("\nPlease provide the ip address and the port for the server to connect");
 		exit(1);
 	}
 	//create the server sockets
@@ -196,91 +206,76 @@ int main(int argc, char *argv[])
 
 	//main loop
 
-	zpoller_t *poller = zpoller_new(router);
-
 	while (1) {
-		zpoller_wait(poller, -1);
-		if (zpoller_terminated(poller)) {
-			return -1;
-		}
-		if (!zpoller_expired(poller)) {
+		zmsg_t *msg = zmsg_recv(router);
+		zframe_t *address = zmsg_unwrap(msg);
 
-			zmsg_t *msg = zmsg_recv(router);
-			zframe_t *address = zmsg_unwrap(msg);
+		printf("\nposition server received: %s\n",
+		       (const char *)zframe_data(zmsg_first(msg)));
 
-			printf("\nposition server received: %s\n",
-			       (const char *)zframe_data(zmsg_first(msg)));
+		const char *data;
+		size_t data_size = zframe_size(zmsg_first(msg));
+		data = zframe_data(zmsg_first(msg));
+		json_t *request_json;
+		json_error_t error;
+		request_json = json_loadb(data, data_size, 0, &error);
+		zmsg_destroy(&msg);
 
-			const char *data;
-			size_t data_size = zframe_size(zmsg_first(msg));
-			data = zframe_data(zmsg_first(msg));
-			json_t *request_json;
-			json_error_t error;
-			request_json = json_loadb(data, data_size, 0, &error);
-			zmsg_destroy(&msg);
+		json_t *response;
 
-			json_t *response;
+		json_t *request = json_object_get(request_json, "request");
+		const char *type =
+		    json_string_value(json_object_get(request, "type"));
 
-			json_t *request =
-			    json_object_get(request_json, "request");
-			const char *type =
-			    json_string_value(json_object_get(request, "type"));
+		if (strcmp(type, "searchRequest") == 0) {
 
-			if (strcmp(type, "searchRequest") == 0) {
+			response = search(quadbit, request);
+		} else {
 
-				response = search(quadbit, request);
+			if (strcmp(type, "newNodeRequest") == 0) {
+
+				response = insert(positiondb, quadbit, request);
+
 			} else {
-
-				if (strcmp(type, "newNodeRequest") == 0) {
-
+				if (strcmp(type, "newPosition") == 0) {
 					response =
-					    insert(positiondb, quadbit,
-						   request);
+					    newPosition(positiondb,
+							quadbit, request);
 
 				} else {
-					if (strcmp(type, "newPosition") == 0) {
+					if (strcmp(type, "delNode") == 0) {
 						response =
-						    newPosition(positiondb,
-								quadbit,
-								request);
+						    delete(positiondb,
+							   quadbit, request);
 
 					} else {
-						if (strcmp(type, "delNode") ==
-						    0) {
-							response =
-							    delete(positiondb,
-								   quadbit,
-								   request);
-
-						} else {
 //TODO Do the remaining requests
-						}
 					}
 				}
 			}
-			if (response) {
-				json_t *response_json = json_object();
-
-				json_object_set(response_json, "requestId",
-						json_object_get
-						(request_json, "requestId"));
-				json_object_set_new(response_json, "response",
-						    response);
-
-				zmsg_t *resp_msg = zmsg_new();
-				char *res_json_str =
-				    json_dumps(response_json, JSON_COMPACT);
-				printf("\nposition server sent: %s\n",
-				       res_json_str);
-				zmsg_addstr(resp_msg, res_json_str);
-				free(res_json_str);
-
-				zmsg_wrap(resp_msg, address);
-				zmsg_send(&resp_msg, router);
-
-				json_decref(response_json);
-			}
-			json_decref(request_json);
 		}
+		if (response) {
+			json_t *response_json = json_object();
+
+			json_object_set(response_json, "requestId",
+					json_object_get
+					(request_json, "requestId"));
+			json_object_set_new(response_json, "response",
+					    response);
+
+			zmsg_t *resp_msg = zmsg_new();
+			char *res_json_str =
+			    json_dumps(response_json, JSON_COMPACT);
+			printf("\nposition server sent: %s\n", res_json_str);
+			zmsg_addstr(resp_msg, res_json_str);
+			free(res_json_str);
+
+			zmsg_wrap(resp_msg, address);
+			zmsg_send(&resp_msg, router);
+
+			json_decref(response_json);
+		}
+		json_decref(request_json);
 	}
+
 }

@@ -47,7 +47,7 @@ function Data(view) {
     }
 
 
-    this.newNode = function(x, y, node) {
+    this.newNode = function(x, y) {
 
         this.socket.emit("request", {
             clientRequestId: thiss.clientRequestId,
@@ -55,8 +55,7 @@ function Data(view) {
                 type: "newNode",
                 node: {
                     posX: x,
-                    posY: y,
-                    node: node
+                    posY: y
                 }
             }
         });
